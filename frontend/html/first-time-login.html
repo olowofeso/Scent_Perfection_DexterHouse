@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfume AI - Complete Your Profile</title>
+    <link rel="stylesheet" href="../css/firsttime.css">
+</head>
+<body>
+    <div class="stepper-box">
+        <h2>Bliss<span class="flower-emoji">🌸</span></h2>
+        <p>This helps us tailor the best recommendations for you!</p>
+
+        <form id="profileQuestionsForm">
+            <div class="stepper-step stepper-active" data-step="1">
+                <div class="stepper-circle">1</div>
+                <div class="stepper-line"></div>
+                <div class="stepper-content">
+                    <div class="stepper-title">Basic Information</div>
+                    <div class="stepper-form-content">
+                        <div class="input-group">
+                            <label for="age">Age</label>
+                            <input type="number" id="age" name="age" min="13" max="120" required>
+                            <div class="error-message" id="ageError"></div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="sex">Biological Sex</label>
+                            <select id="sex" name="sex" required>
+                                <option value="">Select your biological sex</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="prefer_not_to_say">Prefer not to say</option>
+                            </select>
+                            <div class="error-message" id="sexError"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stepper-step stepper-pending" data-step="2">
+                <div class="stepper-circle">2</div>
+                <div class="stepper-line"></div>
+                <div class="stepper-content">
+                    <div class="stepper-title">Physical Attributes</div>
+                    <div class="stepper-form-content">
+                        <div class="input-group">
+                            <label for="weight">Weight</label>
+                            <div class="input-field-with-unit">
+                                <input type="number" id="weight" name="weight" step="0.1" min="20" required placeholder="e.g., 70">
+                                <select id="weightUnit" class="unit-selector">
+                                    <option value="kg">kg</option>
+                                    <option value="lb">lb</option>
+                                </select>
+                            </div>
+                            <div class="error-message" id="weightError"></div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="height">Height</label>
+                            <div class="input-field-with-unit">
+                                <input type="number" id="height" name="height" step="1" min="50" required placeholder="e.g., 175">
+                                <select id="heightUnit" class="unit-selector">
+                                    <option value="cm">cm</option>
+                                    <option value="ft">ft</option>
+                                </select>
+                            </div>
+                            <div class="error-message" id="heightError"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stepper-step stepper-pending" data-step="3">
+                <div class="stepper-circle">3</div>
+                <div class="stepper-content"> <div class="stepper-title">Personal Style & Demographics</div>
+                    <div class="stepper-form-content">
+                        <div class="input-group">
+                            <label for="style">Personal Style</label>
+                            <select id="style" name="style" required>
+                                <option value="">Choose a style</option>
+                                <option value="academic">Academic</option>
+                                <option value="boho-chic">Boho-Chic</option>
+                                <option value="casual">Casual</option>
+                                <option value="classic">Classic</option>
+                                <option value="dark-academia">Dark Academia</option>
+                                <option value="e-girl">E-Girl</option>
+                                <option value="elegant">Elegant</option>
+                                <option value="gothic">Gothic</option>
+                                <option value="grunge">Grunge</option>
+                                <option value="hippie">Hippie</option>
+                                <option value="indie">Indie</option>
+                                <option value="kawaii">Kawaii</option>
+                                <option value="minimalist">Minimalist</option>
+                                <option value="preppy">Preppy</option>
+                                <option value="punk">Punk</option>
+                                <option value="retro">Retro</option>
+                                <option value="rocker">Rocker</option>
+                                <option value="sporty">Sporty</option>
+                                <option value="streetwear">Streetwear</option>
+                                <option value="trendy">Trendy</option>
+                            </select>
+                            <div class="error-message" id="styleError"></div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="race">Race/Ethnicity</label>
+                            <select id="race" name="race" required>
+                                <option value="">Select your racial group</option>
+                                <option value="white">White</option>
+                                <option value="black">Black or African American</option>
+                                <option value="asian">Asian</option>
+                                <option value="hispanic_latino">Hispanic or Latino</option>
+                                <option value="native_american">Native American or Alaska Native</option>
+                                <option value="pacific_islander">Native Hawaiian or Pacific Islander</option>
+                                <option value="two_or_more">Two or More Races</option>
+                                <option value="other">Other</option>
+                                <option value="prefer_not_to_say">Prefer not to say</option>
+                            </select>
+                            <div class="error-message" id="raceError"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stepper-controls">
+                <button type="button" class="stepper-button" id="prevButton" disabled>
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        fill="currentColor"
+                        class="bi bi-arrow-left"
+                        viewBox="0 0 16 16"
+                    >
+                        <path
+                            fill-rule="evenodd"
+                            d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L13.293 8.5H14.5A.5.5 0 0 0 15 8"
+                        ></path>
+                    </svg>
+                    Previous
+                </button>
+                <button type="button" class="stepper-button stepper-button-primary" id="nextButton">
+                    Next
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        fill="currentColor"
+                        class="bi bi-arrow-right"
+                        viewBox="0 0 16 16"
+                    >
+                        <path
+                            fill-rule="evenodd"
+                            d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8"
+                        ></path>
+                    </svg>
+                </button>
+                <button type="submit" class="stepper-button stepper-button-primary" id="submitButton" style="display: none;">
+                    Submit & Continue
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('profileQuestionsForm');
+        const steps = Array.from(document.querySelectorAll('.stepper-step'));
+        const prevButton = document.getElementById('prevButton');
+        const nextButton = document.getElementById('nextButton');
+        const submitButton = document.getElementById('submitButton');
+        let currentStepIndex = 0;
+
+        // Get references to unit elements
+        const weightInput = document.getElementById('weight');
+        const weightUnit = document.getElementById('weightUnit');
+        const heightInput = document.getElementById('height');
+        const heightUnit = document.getElementById('heightUnit');
+
+        // Store internal values in standard units (kg and cm)
+        // Initialize to NaN (Not a Number) to signify no value
+        let internalWeightKg = NaN;
+        let internalHeightCm = NaN;
+
+        // Conversion factors
+        const KG_TO_LB = 2.20462;
+        const CM_TO_FEET_DECIMAL = 0.0328084; // 1 cm = ~0.0328084 feet
+
+        function updateStepperUI() {
+            steps.forEach((step, index) => {
+                const circle = step.querySelector('.stepper-circle');
+                const formContent = step.querySelector('.stepper-form-content');
+
+                if (index < currentStepIndex) {
+                    step.classList.remove('stepper-active', 'stepper-pending');
+                    step.classList.add('stepper-completed');
+                    if (circle) circle.innerHTML = '<svg viewBox="0 0 16 16" class="bi bi-check-lg" fill="currentColor" height="16" width="16" xmlns="http://www.w3.org/2000/svg"><path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425z"></path></svg>';
+                } else if (index === currentStepIndex) {
+                    step.classList.remove('stepper-completed', 'stepper-pending');
+                    step.classList.add('stepper-active');
+                    if (circle) circle.textContent = index + 1;
+                } else {
+                    step.classList.remove('stepper-completed', 'stepper-active');
+                    step.classList.add('stepper-pending');
+                    if (circle) circle.textContent = index + 1;
+                }
+
+                if (formContent) {
+                    formContent.style.display = (index === currentStepIndex) ? 'block' : 'none';
+                }
+            });
+
+            prevButton.disabled = currentStepIndex === 0;
+            nextButton.style.display = (currentStepIndex === steps.length - 1) ? 'none' : 'inline-flex';
+            submitButton.style.display = (currentStepIndex === steps.length - 1) ? 'inline-flex' : 'none';
+        }
+
+        function validateCurrentStep() {
+            const currentStepContent = steps[currentStepIndex].querySelector('.stepper-form-content');
+            const inputs = currentStepContent.querySelectorAll('input[required], select[required]');
+            let isValid = true;
+
+            inputs.forEach(input => {
+                const errorDisplay = document.getElementById(input.id + 'Error');
+                if (!input.value.trim() || input.value === '') { // Also check for empty string from select
+                    isValid = false;
+                    input.classList.add('invalid');
+                    if (errorDisplay) {
+                        errorDisplay.textContent = 'This field is required.';
+                        errorDisplay.style.display = 'block';
+                    }
+                } else {
+                    input.classList.remove('invalid');
+                    if (errorDisplay) {
+                        errorDisplay.textContent = '';
+                        errorDisplay.style.display = 'none';
+                    }
+
+                    // Specific number range validation
+                    if (input.type === 'number') {
+                        const min = parseFloat(input.min);
+                        const max = parseFloat(input.max);
+                        const value = parseFloat(input.value);
+
+                        if (isNaN(value) || value < min || value > max) {
+                            isValid = false;
+                            input.classList.add('invalid');
+                            if (errorDisplay) {
+                                let msg = `Please enter a value between ${min} and ${max}.`;
+                                if (input.id === 'weight') {
+                                    msg = `Please enter a weight between ${min} and ${max} ${weightUnit.value}.`;
+                                } else if (input.id === 'height') {
+                                    msg = `Please enter a height between ${min} and ${max} ${heightUnit.value}.`;
+                                }
+                                errorDisplay.textContent = msg;
+                                errorDisplay.style.display = 'block';
+                            }
+                        }
+                    }
+                }
+            });
+            return isValid;
+        }
+
+        // --- Unit Conversion Logic ---
+
+        function updateWeightInput() {
+            const currentUnit = weightUnit.value;
+            let displayValue;
+            let minVal, maxVal;
+
+            if (currentUnit === 'kg') {
+                minVal = 20; maxVal = 300; // Realistic kg range
+                displayValue = isNaN(internalWeightKg) ? '' : internalWeightKg.toFixed(1);
+            } else { // lb
+                minVal = 44; maxVal = 660; // Realistic lb range (approx 20kg to 300kg)
+                displayValue = isNaN(internalWeightKg) ? '' : (internalWeightKg * KG_TO_LB).toFixed(1);
+            }
+            weightInput.value = displayValue;
+            weightInput.min = minVal;
+            weightInput.max = maxVal;
+            weightInput.placeholder = `e.g., ${currentUnit === 'kg' ? '70' : '154'}`; // Dynamic placeholder
+        }
+
+        function updateHeightInput() {
+            const currentUnit = heightUnit.value;
+            let displayValue;
+            let minVal, maxVal;
+
+            if (currentUnit === 'cm') {
+                minVal = 50; maxVal = 250; // Realistic cm range
+                displayValue = isNaN(internalHeightCm) ? '' : internalHeightCm.toFixed(0);
+            } else { // ft (decimal feet)
+                minVal = (50 * CM_TO_FEET_DECIMAL).toFixed(2); // approx 1.64 ft
+                maxVal = (250 * CM_TO_FEET_DECIMAL).toFixed(2); // approx 8.20 ft
+                heightInput.step = 0.01; // Allow decimal input for feet
+                displayValue = isNaN(internalHeightCm) ? '' : (internalHeightCm * CM_TO_FEET_DECIMAL).toFixed(2);
+            }
+            heightInput.value = displayValue;
+            heightInput.min = minVal;
+            heightInput.max = maxVal;
+            heightInput.placeholder = `e.g., ${currentUnit === 'cm' ? '175' : '5.7'}`; // Dynamic placeholder
+        }
+
+        // Event listeners for unit changes
+        weightUnit.addEventListener('change', updateWeightInput);
+        heightUnit.addEventListener('change', updateHeightInput);
+
+        // Event listeners for input changes to update internal values
+        weightInput.addEventListener('input', () => {
+            const currentUnit = weightUnit.value;
+            let inputValue = parseFloat(weightInput.value);
+
+            if (!isNaN(inputValue)) {
+                if (currentUnit === 'kg') {
+                    internalWeightKg = inputValue;
+                } else { // lb
+                    internalWeightKg = inputValue / KG_TO_LB;
+                }
+            } else {
+                internalWeightKg = NaN; // If input is cleared or invalid, set internal to NaN
+            }
+            // Trigger validation if user is actively typing
+            validateCurrentStep();
+        });
+
+        heightInput.addEventListener('input', () => {
+            const currentUnit = heightUnit.value;
+            let inputValue = parseFloat(heightInput.value);
+
+            if (!isNaN(inputValue)) {
+                if (currentUnit === 'cm') {
+                    internalHeightCm = inputValue;
+                } else { // ft
+                    internalHeightCm = inputValue / CM_TO_FEET_DECIMAL;
+                }
+            } else {
+                internalHeightCm = NaN; // If input is cleared or invalid, set internal to NaN
+            }
+            // Trigger validation if user is actively typing
+            validateCurrentStep();
+        });
+
+
+        prevButton.addEventListener('click', () => {
+            if (currentStepIndex > 0) {
+                currentStepIndex--;
+                updateStepperUI();
+            }
+        });
+
+        nextButton.addEventListener('click', () => {
+            if (validateCurrentStep()) {
+                if (currentStepIndex < steps.length - 1) {
+                    currentStepIndex++;
+                    updateStepperUI();
+                    // After moving to next step, ensure initial values/placeholders for new step are displayed
+                    if (currentStepIndex === 1) { // If moving to Physical Attributes step (index 1)
+                        updateWeightInput();
+                        updateHeightInput();
+                    }
+                }
+            }
+        });
+
+        form.addEventListener('submit', (event) => {
+            event.preventDefault(); // Prevent default form submission
+            if (validateCurrentStep()) {
+                // All steps are valid, proceed with form submission logic
+                alert('Profile data submitted successfully!');
+                // Here you would typically collect all form data and send it to your backend
+                const formData = new FormData(form);
+                const data = {};
+                formData.forEach((value, key) => {
+                    // Use internal standard units for submission
+                    if (key === 'weight') {
+                        data[key] = isNaN(internalWeightKg) ? null : internalWeightKg.toFixed(1); // Ensure consistent unit for backend
+                        data['weightUnit'] = 'kg'; // Also send the unit used internally
+                    } else if (key === 'height') {
+                        data[key] = isNaN(internalHeightCm) ? null : internalHeightCm.toFixed(0); // Ensure consistent unit for backend
+                        data['heightUnit'] = 'cm'; // Also send the unit used internally
+                    } else {
+                        data[key] = value;
+                    }
+                });
+                console.log('Final Form Data (Internal Units):', data);
+
+                // Example: Redirect to another page after submission
+                // window.location.href = 'dashboard.html';
+            } else {
+                alert('Please complete all required fields in this step.');
+            }
+        });
+
+        // Initial UI update on page load
+        updateStepperUI();
+        // Removed calls to updateWeightInput() and updateHeightInput() here
+        // as they will now be called when advancing to Step 2
+    </script>
+</body>
+</html>

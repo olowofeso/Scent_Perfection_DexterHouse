@@ -1,0 +1,218 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: Arial, sans-serif;
+    background-color: #f0f2f5;
+}
+
+.stepper-box {
+    background-color: white;
+    border-radius: 12px;
+    padding: 32px;
+    width: 500px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.stepper-box h2 {
+    text-align: center;
+    color: #0f172a;
+    margin-bottom: 15px;
+}
+
+.flower-emoji {
+    display: inline-block;
+    animation: bounce 2s infinite ease-in-out;
+    margin-left: 3px;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    25% {
+        transform: translateY(-2px);
+    }
+    50% {
+        transform: translateY(0);
+    }
+    75% {
+        transform: translateY(-1px);
+    }
+}
+
+/* Stepper Button Styles */
+.stepper-button {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    background-color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.stepper-button:hover:not(:disabled) {
+    background-color: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.stepper-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.stepper-button-primary {
+    background-color: #0f172a;
+    color: white;
+    border-color: #0f172a;
+}
+
+.stepper-button-primary:hover:not(:disabled) {
+    background-color: #1e293b;
+    border-color: #1e293b;
+}
+
+/* Styles for perfume-entry.html specific elements */
+.perfume-input-section {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding-top: 10px;
+}
+
+.perfume-input-section input[type="text"] {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 16px;
+    color: #333;
+}
+
+.perfume-input-section input[type="text"]:focus {
+    border-color: #0f172a;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.2);
+}
+
+.perfume-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background-color: #f9f9f9;
+}
+
+.perfume-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #333;
+    font-size: 16px;
+}
+
+.perfume-list li:last-child {
+    border-bottom: none;
+}
+
+/* Brutalist Button Styles */
+/* These rules apply to any button with the class "button" */
+.button {
+    width: 120px; /* Increased width */
+    padding: 0;
+    border: none;
+    transform: rotate(3deg); /* Slightly increased rotation for better visibility of effect */
+    transform-origin: center;
+    font-family: "Gochi Hand", cursive;
+    text-decoration: none;
+    font-size: 15px; /* Slightly increased font size */
+    cursor: pointer;
+    padding-bottom: 3px;
+    border-radius: 5px;
+    box-shadow: 0 2px 0 #494a4b;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    margin-left: 8px; /* Space between buttons if they are next to each other */
+    flex-shrink: 0; /* Prevent buttons from shrinking */
+}
+
+.button span {
+    background: #f1f5f8;
+    display: block;
+    padding: 0.5rem 1rem; /* Increased padding */
+    border-radius: 5px;
+    border: 2px solid #494a4b;
+    color: #494a4b;
+}
+
+.button:active {
+    transform: translateY(3px) rotate(0deg); /* Adjusted active state for more noticeable press */
+    padding-bottom: 0px;
+    outline: 0;
+}
+
+/* Specific styles for Edit and Remove buttons by adding their color */
+.button.edit-button {
+    background-color: #5cdb95; /* Green for Edit */
+}
+
+.button.remove-button {
+    background-color: #ef4444; /* Red for Remove */
+}
+
+/* Adjustments for hover states */
+.button:hover {
+    transform: rotate(0deg); /* Straighten on hover */
+}
+
+.button.edit-button:hover {
+    background-color: #45bf83; /* Darker green on hover */
+}
+
+.button.remove-button:hover {
+    background-color: #dc2626; /* Darker red on hover */
+}
+
+/* Styles for buttons within the perfume list items */
+.perfume-actions {
+    display: flex;
+    gap: 8px; /* Space between the edit and remove buttons */
+}
+
+.perfume-actions .button {
+    width: auto; /* Let the button width adjust to content */
+    padding: 0; /* Already defined in .button, but good to double check */
+    transform: none; /* Remove rotation if you want them straight in the list */
+    box-shadow: none; /* Remove shadow if you want a flatter look in the list */
+}
+
+.perfume-actions .button span {
+    padding: 0.3rem 0.6rem; /* Adjust padding to make them smaller within the list */
+    font-size: 13px; /* Smaller font size for action buttons in the list */
+}
+
+/* Optional: Re-add a subtle effect for hover if you removed transform above */
+.perfume-actions .button:hover {
+    transform: translateY(-1px); /* Little lift on hover */
+    box-shadow: 0 1px 0 #494a4b;
+}
+
+.perfume-actions .button:active {
+    transform: translateY(1px);
+    box-shadow: 0 0 0 #494a4b;
+}

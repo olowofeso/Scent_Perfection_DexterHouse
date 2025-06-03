@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Perfume AI</title>
+    <link rel="stylesheet" href="../css/settings.css"> <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@700&display=swap" rel="stylesheet"> </head>
+<body>
+    <div class="main-container">
+        <h1 class="page-title">
+            Bliss <span class="flower-emoji">🌸</span>
+        </h1>
+
+        <div class="sections-wrapper">
+            <article class="article-wrapper">
+                <div class="rounded-lg container-project"></div>
+                <div class="project-info">
+                    <div class="flex-pr">
+                        <div class="project-title">Edit Profile Information</div>
+                    </div>
+                    <form id="editProfileForm" class="form-grid">
+                        <div class="form-field">
+                            <label for="editAge" class="form-label">Age</label>
+                            <input type="number" id="editAge" name="age" min="13" max="120" class="form-input" placeholder="e.g., 30">
+                            <div class="error-message" id="editAgeError"></div>
+                        </div>
+                        <div class="form-field">
+                            <label for="editWeight" class="form-label">Weight (kg)</label>
+                            <input type="number" id="editWeight" name="weight" step="0.1" min="20" class="form-input" placeholder="e.g., 70.5">
+                            <div class="error-message" id="editWeightError"></div>
+                        </div>
+                        <div class="form-field">
+                            <label for="editHeight" class="form-label">Height (cm)</label>
+                            <input type="number" id="editHeight" name="height" step="1" min="50" class="form-input" placeholder="e.g., 175">
+                            <div class="error-message" id="editHeightError"></div>
+                        </div>
+                        <div class="form-field">
+                            <label for="editSex" class="form-label">Biological Sex</label>
+                            <select id="editSex" name="sex" class="form-input">
+                                <option value="">Select your biological sex</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="prefer_not_to_say">Prefer not to say</option>
+                            </select>
+                            <div class="error-message" id="editSexError"></div>
+                        </div>
+                        <div class="form-field">
+                            <label for="editStyle" class="form-label">Personal Style</label>
+                            <select id="editStyle" name="style" class="form-input">
+                                <option value="">Choose a style</option>
+                                <option value="academic">Academic</option>
+                                <option value="boho-chic">Boho-Chic</option>
+                                <option value="casual">Casual</option>
+                                <option value="classic">Classic</option>
+                                <option value="dark-academia">Dark Academia</option>
+                                <option value="e-girl">E-Girl</option>
+                                <option value="elegant">Elegant</option>
+                                <option value="gothic">Gothic</option>
+                                <option value="grunge">Grunge</option>
+                                <option value="hippie">Hippie</option>
+                                <option value="indie">Indie</option>
+                                <option value="kawaii">Kawaii</option>
+                                <option value="minimalist">Minimalist</option>
+                                <option value="preppy">Preppy</option>
+                                <option value="punk">Punk</option>
+                                <option value="retro">Retro</option>
+                                <option value="rocker">Rocker</option>
+                                <option value="sporty">Sporty</option>
+                                <option value="streetwear">Streetwear</option>
+                                <option value="trendy">Trendy</option>
+                            </select>
+                            <div class="error-message" id="editStyleError"></div>
+                        </div>
+                        <div class="form-field">
+                            <label for="editRace" class="form-label">Race/Ethnicity</label>
+                            <select id="editRace" name="race" class="form-input">
+                                <option value="">Select your racial group</option>
+                                <option value="white">White</option>
+                                <option value="black">Black or African American</option>
+                                <option value="asian">Asian</option>
+                                <option value="hispanic_latino">Hispanic or Latino</option>
+                                <option value="native_american">Native American or Alaska Native</option>
+                                <option value="pacific_islander">Native Hawaiian or Pacific Islander</option>
+                                <option value="two_or_more">Two or More Races</option>
+                                <option value="other">Other</option>
+                                <option value="prefer_not_to_say">Prefer not to say</option>
+                            </select>
+                            <div class="error-message" id="editRaceError"></div>
+                        </div>
+                        <div class="form-button-container">
+                            <button type="submit" class="button">
+                                <span>Save Changes</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </article>
+
+            <article class="article-wrapper">
+                <div class="rounded-lg container-project"></div>
+                <div class="project-info">
+                    <div class="flex-pr">
+                        <div class="project-title">Manage Perfume Collection</div>
+                    </div>
+                    <div class="form-stack">
+                        <p class="form-label">Add new perfumes:</p>
+                        <div class="perfume-input-section" style="display: flex; gap: 10px; align-items: center;">
+                            <input type="text" id="perfumeNameInputSettings" placeholder="e.g., Dior Sauvage, Chanel No. 5" class="form-input" style="flex-grow: 1;">
+                            <button id="addPerfumeBtnSettings" class="button" style="width: auto; padding: 10px 20px; font-size: 1em;">
+                                <span>Add Perfume</span>
+                            </button>
+                        </div>
+                        <p class="form-label" style="margin-top: 20px;">Your current perfumes:</p>
+                        <ul id="perfumeListSettings" class="perfume-list" style="list-style: none; padding: 0; margin: 0; max-height: 250px; overflow-y: auto; border: 1px solid #475569; border-radius: 8px; background-color: #334155;">
+                            <li style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #475569; color: white;">
+                                <span>Example Perfume 1</span>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="button" data-action="edit" style="width: auto; padding: 5px 10px; font-size: 0.8em; background: linear-gradient(45deg, #22c55e, #16a34a, #15803d);">
+                                        <span>EDIT</span>
+                                    </button>
+                                    <button class="button" data-action="remove" style="width: auto; padding: 5px 10px; font-size: 0.8em; background: linear-gradient(45deg, #ef4444, #dc2626, #b91c1c);">
+                                        <span>DELETE</span>
+                                    </button>
+                                </div>
+                            </li>
+                            <li style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #475569; color: white;">
+                                <span>Example Perfume 2</span>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="button" data-action="edit" style="width: auto; padding: 5px 10px; font-size: 0.8em; background: linear-gradient(45deg, #22c55e, #16a34a, #15803d);">
+                                        <span>EDIT</span>
+                                    </button>
+                                    <button class="button" data-action="remove" style="width: auto; padding: 5px 10px; font-size: 0.8em; background: linear-gradient(45deg, #ef4444, #dc2626, #b91c1c);">
+                                        <span>DELETE</span>
+                                    </button>
+                                </div>
+                            </li>
+                            <li style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; color: white;">
+                                <span>Example Perfume 3</span>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="button" data-action="edit" style="width: auto; padding: 5px 10px; font-size: 0.8em; background: linear-gradient(45deg, #22c55e, #16a34a, #15803d);">
+                                        <span>EDIT</span>
+                                    </button>
+                                    <button class="button" data-action="remove" style="width: auto; padding: 5px 10px; font-size: 0.8em; background: linear-gradient(45deg, #ef4444, #dc2626, #b91c1c);">
+                                        <span>DELETE</span>
+                                    </button>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </article>
+
+            <article class="article-wrapper" id="changePasswordSection">
+                <div class="rounded-lg container-project"></div>
+                <div class="project-info">
+                    <div class="flex-pr">
+                        <div class="project-title">Change Password</div>
+                    </div>
+                    <form id="changePasswordForm" class="form-stack">
+                        <div class="form-field">
+                            <label for="currentPassword" class="form-label">Current Password</label>
+                            <input type="password" id="currentPassword" name="currentPassword" required class="form-input">
+                            <div class="error-message" id="currentPasswordError"></div>
+                        </div>
+                        <div class="form-field">
+                            <label for="newPassword" class="form-label">New Password</label>
+                            <input type="password" id="newPassword" name="newPassword" required class="form-input">
+                            <div class="error-message" id="newPasswordError"></div>
+                        </div>
+                        <div class="form-field">
+                            <label for="confirmNewPassword" class="form-label">Confirm New Password</label>
+                            <input type="password" id="confirmNewPassword" name="confirmNewPassword" required class="form-input">
+                            <div class="error-message" id="confirmNewPasswordError"></div>
+                        </div>
+                        <div class="form-button-container">
+                            <button type="submit" class="button">
+                                <span>Change Password</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </article>
+
+            <article class="article-wrapper" id="accountActionsSection">
+                <div class="rounded-lg container-project"></div>
+                <div class="project-info">
+                    <div class="flex-pr">
+                        <div class="project-title">Account Actions</div>
+                    </div>
+                    <div class="button-group">
+                        <button id="signOutBtn" class="dots-button">
+                            <div><span>Sign Out</span></div>
+                        </button>
+                        <button id="deleteAccountBtn" class="glitch-button">
+                            <span>Delete Account</span>
+                        </button>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </div>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+/* Styles specific to the Sign Up Form */
+
+/* General container for centering (optional, if you want full page centering specific to signup) */
+.signup-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    min-height: 100vh; /* Take full viewport height */
+    width: 100%;
+    background-color: #f0f8ff; /* A very light blue background for the page */
+  }
+  
+  .signup-form_area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background-color: #DAEEF7; /* Lighter blue for background */
+    height: auto;
+    width: auto;
+    padding: 30px; /* Add some internal padding */
+    border: 2px solid #1A2B43; /* Darker blue for border */
+    border-radius: 20px;
+    box-shadow: 3px 4px 0px 1px #3A7CA5; /* Blue for shadow */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+  }
+  
+  .signup-title {
+    color: #1A2B43; /* Darker blue for title */
+    font-weight: 900;
+    font-size: 1.8em; /* Slightly larger title */
+    margin-top: 0; /* Adjust spacing */
+    margin-bottom: 25px; /* Space below title */
+  }
+  
+  .signup-sub_title {
+    font-weight: 600;
+    margin: 5px 0;
+    color: #3A7CA5; /* Use a blue color for sub-titles */
+  }
+  
+  .signup-form_group {
+    display: flex;
+    flex-direction: column;
+    align-items: baseline;
+    margin: 10px;
+  }
+  
+  .signup-form_style {
+    outline: none;
+    border: 2px solid #1A2B43; /* Darker blue for input border */
+    box-shadow: 3px 4px 0px 1px #3A7CA5; /* Blue for input shadow */
+    width: 290px;
+    padding: 12px 10px;
+    border-radius: 4px;
+    font-size: 15px;
+    color: #1A2B43; /* Text color for input */
+    box-sizing: border-box; /* Important for consistent sizing */
+  }
+  
+  .signup-form_style::placeholder {
+      color: #666; /* Placeholder text color */
+      opacity: 0.8;
+  }
+  
+  .signup-form_style:focus, .signup-btn:focus {
+    transform: translateY(4px);
+    box-shadow: 1px 2px 0px 0px #3A7CA5;
+  }
+  
+  .signup-btn {
+    padding: 15px;
+    margin: 25px 0px;
+    width: 290px;
+    font-size: 16px; /* Slightly larger font */
+    background: #2D6B9C; /* Medium blue for button */
+    border-radius: 10px;
+    font-weight: 800;
+    box-shadow: 3px 3px 0px 0px #3A7CA5;
+    color: #FFFFFF; /* White text for better contrast on dark blue */
+    cursor: pointer;
+    border: none; /* Remove default button border */
+    transition: opacity 0.2s ease; /* Smooth transition for hover */
+  }
+  
+  .signup-btn:hover {
+    opacity: .9;
+  }
+  
+  .signup-link {
+    font-weight: 800;
+    color: #1A2B43; /* Darker blue for links */
+    padding: 5px;
+    text-decoration: none; /* Remove underline */
+    transition: text-decoration 0.2s ease;
+  }
+  
+  .signup-link:hover {
+      text-decoration: underline; /* Add underline on hover */
+  }

@@ -1,0 +1,235 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Consolas', monospace;
+    background-color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.chatbot-container-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    width: 100%;
+    background-color: #222;
+}
+
+.container {
+    width: 800px;
+    height: 600px;
+    background: #1e1e1e;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.terminal_toolbar {
+    display: flex;
+    height: 35px;
+    align-items: center;
+    padding: 0 15px;
+    background: #2d2d2d;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.butt {
+    display: flex;
+    align-items: center;
+}
+
+.btn {
+    height: 13px;
+    width: 13px;
+    border-radius: 50%;
+    margin-right: 8px;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.btn:hover {
+    transform: scale(1.1);
+}
+
+.btn-color.red {
+    background: #ff5f56;
+}
+.btn-color.yellow {
+    background: #ffbd2e;
+}
+.btn-color.green {
+    background: #27c93f;
+}
+
+.user {
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+    justify-content: center;
+}
+
+.flower-emoji {
+    display: inline-block;
+    animation: bounce 2s infinite ease-in-out;
+    margin-left: 3px;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    25% {
+        transform: translateY(-2px);
+    }
+    50% {
+        transform: translateY(0);
+    }
+    75% {
+        transform: translateY(-1px);
+    }
+}
+
+.terminal_body {
+    background: #1e1e1e;
+    flex-grow: 1;
+    padding: 15px;
+    font-family: "Consolas", monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-y: auto;
+    color: #f0f0f0;
+}
+
+.terminal_promt {
+    display: flex;
+    align-items: baseline;
+    margin-bottom: 10px;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+.terminal_promt span {
+    margin-right: 5px;
+}
+
+.terminal_user {
+    color: #00ff9c;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+}
+.terminal_location {
+    color: #0066ff;
+    flex-shrink: 0;
+}
+.terminal_bling {
+    color: #ff00ff;
+    flex-shrink: 0;
+}
+
+.terminal_input_area {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    background: #2d2d2d;
+    border-top: 1px solid #444;
+    flex-shrink: 0;
+}
+
+.terminal_input {
+    flex-grow: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #f0f0f0;
+    font-family: "Consolas", monospace;
+    font-size: 14px;
+    padding: 5px 0;
+    margin-left: 5px;
+}
+
+.terminal_input::placeholder {
+    color: #888;
+    opacity: 0.7;
+}
+
+.terminal_promt .terminal_cursor {
+    display: none;
+}
+
+/* Spinner CSS */
+.spinner {
+    width: 5px; /* Adjusted size to match original '+' button's visual footprint */
+    height: 5px; /* Adjusted size to match original '+' button's visual footprint */
+    --clr: rgb(59, 129, 59); /* Can change this color if desired */
+    --clr-alpha: transparent;
+    animation: spinner 1.6s infinite ease;
+    transform-style: preserve-3d;
+    margin-left: auto; /* Push spinner to the right */
+    margin-right: 5px; /* Small margin from the edge */
+    position: relative;
+    /* Added alignment for visual centering within toolbar height */
+    display: flex; 
+    align-items: center;
+    justify-content: center;
+}
+
+.spinner > div {
+    background-color: var(--clr-alpha);
+    height: 100%;
+    position: absolute;
+    width: 100%;
+    border: 1.25px solid var(--clr); /* Adjusted border thickness for smaller size */
+}
+
+.spinner div:nth-of-type(1) {
+    transform: translateZ(-10px) rotateY(180deg); /* Adjusted for new size (half of 20px) */
+}
+
+.spinner div:nth-of-type(2) {
+    transform: rotateY(-270deg) translateX(50%);
+    transform-origin: top right;
+}
+
+.spinner div:nth-of-type(3) {
+    transform: rotateY(270deg) translateX(-50%);
+    transform-origin: center left;
+}
+
+.spinner div:nth-of-type(4) {
+    transform: rotateX(90deg) translateY(-50%);
+    transform-origin: top center;
+}
+
+.spinner div:nth-of-type(5) {
+    transform: rotateX(-90deg) translateY(50%);
+    transform-origin: bottom center;
+}
+
+.spinner div:nth-of-type(6) {
+    transform: translateZ(10px); /* Adjusted for new size (half of 20px) */
+}
+
+@keyframes spinner {
+    0% {
+        transform: rotate(45deg) rotateX(-25deg) rotateY(25deg);
+    }
+
+    50% {
+        transform: rotate(45deg) rotateX(-385deg) rotateY(25deg);
+    }
+
+    100% {
+        transform: rotate(45deg) rotateX(-385deg) rotateY(385deg);
+    }
+}

@@ -1,0 +1,597 @@
+.signup-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    min-height: 100vh; /* Take full viewport height */
+    width: 100%;
+    background-color: #f0f8ff; /* A very light blue background for the page */
+  }
+  
+  .signup-form_area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background-color: #DAEEF7; /* Lighter blue for background */
+    height: auto;
+    width: auto;
+    padding: 30px; /* Add some internal padding */
+    border: 2px solid #1A2B43; /* Darker blue for border */
+    border-radius: 20px;
+    box-shadow: 3px 4px 0px 1px #3A7CA5; /* Blue for shadow */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+  }
+  
+  .signup-title {
+    color: #1A2B43; /* Darker blue for title */
+    font-weight: 900;
+    font-size: 1.8em; /* Slightly larger title */
+    margin-top: 0; /* Adjust spacing */
+    margin-bottom: 25px; /* Space below title */
+  }
+  
+  .signup-sub_title {
+    font-weight: 600;
+    margin: 5px 0;
+    color: #3A7CA5; /* Use a blue color for sub-titles */
+  }
+  
+  .signup-form_group {
+    display: flex;
+    flex-direction: column;
+    align-items: baseline;
+    margin: 10px;
+  }
+  
+  .signup-form_style {
+    outline: none;
+    border: 2px solid #1A2B43; /* Darker blue for input border */
+    box-shadow: 3px 4px 0px 1px #3A7CA5; /* Blue for input shadow */
+    width: 290px;
+    padding: 12px 10px;
+    border-radius: 4px;
+    font-size: 15px;
+    color: #1A2B43; /* Text color for input */
+    box-sizing: border-box; /* Important for consistent sizing */
+  }
+  
+  .signup-form_style::placeholder {
+      color: #666; /* Placeholder text color */
+      opacity: 0.8;
+  }
+  
+  .signup-form_style:focus, .signup-btn:focus {
+    transform: translateY(4px);
+    box-shadow: 1px 2px 0px 0px #3A7CA5;
+  }
+  
+  .signup-btn {
+    padding: 15px;
+    margin: 25px 0px;
+    width: 290px;
+    font-size: 16px; /* Slightly larger font */
+    background: #2D6B9C; /* Medium blue for button */
+    border-radius: 10px;
+    font-weight: 800;
+    box-shadow: 3px 3px 0px 0px #3A7CA5;
+    color: #FFFFFF; /* White text for better contrast on dark blue */
+    cursor: pointer;
+    border: none; /* Remove default button border */
+    transition: opacity 0.2s ease; /* Smooth transition for hover */
+  }
+  
+  .signup-btn:hover {
+    opacity: .9;
+  }
+  
+  .signup-link {
+    font-weight: 800;
+    color: #1A2B43; /* Darker blue for links */
+    padding: 5px;
+    text-decoration: none; /* Remove underline */
+    transition: text-decoration 0.2s ease;
+  }
+  
+  .signup-link:hover {
+      text-decoration: underline; /* Add underline on hover */
+  }
+
+
+
+
+
+
+/* --- General Centering Container (Add to styles.css or here) --- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*old css*/
+
+h2 {
+    color: #333;
+    margin-bottom: 25px;
+    font-size: 28px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #333;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+.error-message {
+    color: #dc3545;
+    font-size: 13px;
+    margin-top: 5px;
+    text-align: left;
+    height: 18px; /* Reserve space to prevent layout shifting */
+}
+
+.auth-button {
+    width: 100%;
+    padding: 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin-top: 10px;
+}
+
+.auth-button:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+}
+
+.auth-link {
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+.auth-link a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.auth-link a:hover {
+    text-decoration: underline;
+}
+
+.google-signin-btn {
+    margin-top: 25px;
+}
+
+.google-button {
+    width: 100%;
+    padding: 12px;
+    background-color: #db4437; /* Google red */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+}
+
+.google-button::before {
+    content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="%23EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.07 0 24 0 14.1 0 5.31 5.61 1.83 13.5l7.93 6.16C11.53 14.18 17.22 9.5 24 9.5z"/><path fill="%234285F4" d="M46.98 24c0-.95-.08-1.87-.2-2.75H24v5.49h13.71c-.74 4.17-4.58 7.27-9.71 7.27-5.81 0-10.74-3.9-12.51-9.14l-7.93 6.16c3.48 7.72 12.33 13.06 22.44 13.06 14.28 0 23.4-9.37 23.4-22.95z"/><path fill="%23FBBC04" d="M9.53 28.32c-.82-2.48-.82-5.28 0-7.76l-7.93-6.16C.94 17.04 0 20.44 0 24s.94 6.96 2.51 10.51l7.02-5.44z"/><path fill="%2334A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.77l-6.85-5.3c-2.48 1.65-5.64 2.62-9.04 2.62-6.79 0-12.59-4.7-14.63-10.92l-7.02 5.44C5.31 42.39 14.1 48 24 48z"/></svg>');
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+}
+
+.google-button:hover {
+    background-color: #c13125;
+}
+
+.profile-questions-container {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 500px; /* Slightly wider for more questions */
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.profile-questions-container h2 {
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.profile-questions-container p {
+    color: #666;
+    margin-bottom: 30px;
+    font-size: 15px;
+}
+
+.profile-questions-container .input-group select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 16px;
+    background-color: white;
+    appearance: none; /* Remove default arrow in some browsers */
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23000%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13.6-6.4H18.5c-4.5%200-8.5%202.2-11.2%205.6L0%2078.6l145.4%20145.4L292.4%2078.6z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px;
+}
+
+.profile-questions-container .input-group select:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+.perfume-entry-container {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 600px; /* Wider for list */
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.perfume-entry-container h2 {
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.perfume-entry-container p {
+    color: #666;
+    margin-bottom: 25px;
+    font-size: 15px;
+}
+
+.perfume-input-section {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.perfume-input-section input {
+    flex-grow: 1;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.perfume-input-section input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+.primary-button {
+    padding: 12px 20px;
+    background-color: #28a745; /* Green for add */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.primary-button:hover {
+    background-color: #218838;
+}
+
+.perfume-list {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 30px;
+    max-height: 300px; /* Scrollable list */
+    overflow-y: auto;
+    border: 1px solid #eee;
+    border-radius: 5px;
+}
+
+.perfume-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    font-size: 17px;
+    color: #333;
+    background-color: #f9f9f9;
+}
+
+.perfume-list li:last-child {
+    border-bottom: none;
+}
+
+.perfume-list li:nth-child(even) {
+    background-color: #fff;
+}
+
+.perfume-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 10px;
+    padding: 5px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.perfume-actions .edit-btn {
+    color: #007bff;
+}
+
+.perfume-actions .edit-btn:hover {
+    background-color: #e6f2ff;
+}
+
+.perfume-actions .remove-btn {
+    color: #dc3545;
+}
+
+.perfume-actions .remove-btn:hover {
+    background-color: #ffe6e6;
+}
+
+.settings-container {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 600px;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.settings-container h2 {
+    color: #333;
+    margin-bottom: 30px;
+}
+
+.settings-section {
+    background-color: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 25px;
+    margin-bottom: 25px;
+    text-align: left;
+}
+
+.settings-section h3 {
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 22px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.settings-section .input-group {
+    margin-bottom: 18px;
+}
+
+.danger-button {
+    padding: 12px 20px;
+    background-color: #dc3545; /* Red for delete */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 15px; /* Spacing from sign out button */
+    margin-left: 10px; /* Spacing from sign out button */
+}
+
+.danger-button:hover {
+    background-color: #c82333;
+}
+
+.settings-section #signOutBtn {
+    background-color: #6c757d; /* Grey for sign out */
+}
+
+.settings-section #signOutBtn:hover {
+    background-color: #5a6268;
+}
+
+.chatbot-container {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 700px;
+    height: 80vh; /* Make it take up more vertical space */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.chat-header {
+    background-color: #007bff;
+    color: white;
+    padding: 15px;
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.chat-history {
+    flex-grow: 1; /* Takes up available space */
+    padding: 20px;
+    overflow-y: auto; /* Enable scrolling for chat history */
+    background-color: #f0f2f5;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.message {
+    max-width: 80%;
+    padding: 10px 15px;
+    border-radius: 20px;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.user-message {
+    align-self: flex-end; /* Align to the right */
+    background-color: #007bff;
+    color: white;
+    border-bottom-right-radius: 5px; /* Sharper corner */
+}
+
+.bot-message {
+    align-self: flex-start; /* Align to the left */
+    background-color: #e2e6ea;
+    color: #333;
+    border-bottom-left-radius: 5px; /* Sharper corner */
+}
+
+.chat-input-area {
+    padding: 15px 20px;
+    border-top: 1px solid #eee;
+    display: flex;
+    flex-wrap: wrap; /* Allow quick replies to wrap */
+    gap: 10px; /* Space between input, button, and quick replies */
+    background-color: #fff;
+    align-items: center;
+}
+
+.chat-input-area input {
+    flex-grow: 1;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 25px; /* Rounded input */
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+.chat-input-area input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.chat-input-area .primary-button {
+    padding: 10px 20px;
+    border-radius: 25px; /* Rounded button */
+    font-size: 16px;
+    min-width: 80px; /* Ensure button doesn't shrink too much */
+}
+
+.quick-replies {
+    width: 100%; /* Take full width above input */
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+    justify-content: flex-start;
+}
+
+.quick-reply-btn {
+    padding: 8px 15px;
+    border: 1px solid #007bff;
+    background-color: #e6f2ff;
+    color: #007bff;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.quick-reply-btn:hover {
+    background-color: #d1e7ff;
+    transform: translateY(-1px);
+}
+
+.typing-indicator {
+    font-size: 13px;
+    color: #666;
+    padding: 5px 20px 10px;
+    text-align: left;
+    display: none; /* Hidden by default */
+}

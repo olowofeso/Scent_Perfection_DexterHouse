@@ -1,0 +1,246 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: Arial, sans-serif; /* Using a common sans-serif font */
+    background-color: #f0f2f5; /* Light grey background for the page */
+}
+
+.stepper-box {
+    background-color: white;
+    border-radius: 12px;
+    padding: 32px;
+    width: 500px; /* Increased width to better fit form fields */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    max-height: 90vh; /* Limit height to prevent overflow on smaller screens */
+    overflow-y: auto; /* Allow scrolling if content is too long */
+}
+
+/* Header for the stepper box */
+.stepper-box h2 {
+    text-align: center;
+    color: #0f172a;
+    margin-bottom: 15px;
+}
+
+/* Styles for the bouncing flower emoji */
+.flower-emoji {
+    display: inline-block;
+    animation: bounce 2s infinite ease-in-out;
+    margin-left: 3px;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    25% {
+        transform: translateY(-2px);
+    }
+    50% {
+        transform: translateY(0);
+    }
+    75% {
+        transform: translateY(-1px);
+    }
+}
+
+
+.stepper-step {
+    display: flex;
+    margin-bottom: 32px;
+    position: relative;
+}
+
+.stepper-step:last-child {
+    margin-bottom: 0;
+}
+
+.stepper-line {
+    position: absolute;
+    left: 19px;
+    top: 40px;
+    bottom: -32px;
+    width: 2px;
+    background-color: #e2e8f0;
+    z-index: 1;
+}
+
+.stepper-step:last-child .stepper-line {
+    display: none;
+}
+
+.stepper-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px;
+    z-index: 2;
+    font-size: 1.2em; /* Make numbers/icons slightly larger */
+    font-weight: bold;
+}
+
+.stepper-completed .stepper-circle {
+    background-color: #0f172a;
+    color: white;
+}
+
+.stepper-active .stepper-circle {
+    border: 2px solid #0f172a;
+    color: #0f172a;
+}
+
+.stepper-pending .stepper-circle {
+    border: 2px solid #e2e8f0;
+    color: #94a3b8;
+}
+
+.stepper-content {
+    flex: 1;
+}
+
+/* Hide inactive content within steps */
+.stepper-step:not(.stepper-active) .stepper-form-content {
+    display: none;
+}
+
+
+.stepper-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.stepper-completed .stepper-title {
+    color: #0f172a;
+}
+
+.stepper-active .stepper-title {
+    color: #0f172a;
+}
+
+.stepper-pending .stepper-title {
+    color: #94a3b8;
+}
+
+/* Styles for your form inputs within the stepper */
+.input-group {
+    margin-bottom: 15px; /* Spacing between input fields */
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #333; /* Darker text for labels */
+}
+
+/* Style for input and select, including unit selector */
+.input-field-with-unit {
+    display: flex; /* Makes input and select side-by-side */
+    align-items: center; /* Vertically align items in the middle */
+    gap: 10px; /* Space between them */
+}
+
+.input-field-with-unit input[type="number"] {
+    flex-grow: 1; /* Allows the input to take available space */
+    width: auto; /* Ensure it grows dynamically */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 16px;
+    color: #333;
+}
+
+.input-field-with-unit select.unit-selector {
+    /* flex-shrink: 0; */ /* Prevent it from shrinking if space is tight */
+    padding: 8px; /* Slightly less padding than input for better fit */
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
+    color: #333;
+    background-color: #f9f9f9; /* Slight background for dropdown */
+    min-width: 60px; /* Ensure a minimum width for the dropdown */
+}
+
+
+/* General input and select styles, excluding specific unit-selector */
+.input-group input[type="number"]:not(.input-field-with-unit input), /* To apply to age input */
+.input-group select:not(.unit-selector) { /* For gender, style, race dropdowns */
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box; /* Include padding in width */
+    font-size: 16px;
+    color: #333;
+}
+
+
+.input-group input[type="number"]:focus,
+.input-group select:focus,
+.input-field-with-unit select.unit-selector:focus {
+    border-color: #0f172a; /* Highlight on focus */
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.2);
+}
+
+.error-message {
+    color: #ef4444; /* Red color for error messages */
+    font-size: 0.85em;
+    margin-top: 5px;
+    display: none; /* Hidden by default, shown by JS */
+}
+
+/* Stepper Controls */
+.stepper-controls {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 32px;
+}
+
+.stepper-button {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    background-color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.stepper-button:hover:not(:disabled) {
+    background-color: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.stepper-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.stepper-button svg {
+    color: #0f172a; /* Icon color */
+}
+
+.stepper-button-primary {
+    background-color: #0f172a;
+    color: white;
+    border-color: #0f172a;
+}
+
+.stepper-button-primary:hover:not(:disabled) {
+    background-color: #1e293b;
+    border-color: #1e293b;
+}
+
+.stepper-button-primary svg {
+    color: white; /* Icon color for primary button */
+}
