@@ -71,10 +71,30 @@ def get_current_user_id():
 # --- Frontend Routes ---
 @app.route('/')
 def index():
+    if 'user_id' in session:
+        # If first login not completed, maybe redirect to first_time_login or perfume_entry
+        if not session.get('first_login_completed'):
+            # Check current state and redirect appropriately
+            # This logic ensures they continue the onboarding if they try to go to signup
+            user = db.session.get(User, session['user_id']) # Get user object
+            if user and user.age is None: # A proxy for profile info not being filled
+                 return redirect(url_for('first_time_login_page'))
+            else: # Profile is filled, but maybe perfumes not entered
+                 return redirect(url_for('perfume_entry_page'))
+        return redirect(url_for('chatbot_page')) # Default for logged-in, completed users
     return render_template('index.html')
 
 @app.route('/login.html')
 def login_page():
+    if 'user_id' in session:
+        if not session.get('first_login_completed'):
+            # Similar logic to ensure onboarding completion
+            user = db.session.get(User, session['user_id']) # Get user object
+            if user and user.age is None:
+                 return redirect(url_for('first_time_login_page'))
+            else:
+                 return redirect(url_for('perfume_entry_page'))
+        return redirect(url_for('chatbot_page'))
     return render_template('login.html')
 
 @app.route('/perfume-entry.html')
