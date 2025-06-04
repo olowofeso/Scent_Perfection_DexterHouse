@@ -15,7 +15,7 @@ DEEPSEEK_MODEL = "deepseek/DeepSeek-V3-0324" # Or your desired DeepSeek model (e
 # or an Azure AI endpoint key if it's an Azure service.
 # DO NOT EXPOSE YOUR ACTUAL TOKEN IN PUBLIC CODE.
 # For secure usage, load from environment variable:
-GITHUB_AI_TOKEN = os.getenv("GITHUB_AI_TOKEN", "xxx") 
+GITHUB_AI_TOKEN = os.getenv("GITHUB_AI_TOKEN", "xxxxx") 
 
 # --- Initialize the AI client ---
 try:

@@ -179,7 +179,7 @@ body {
     margin-right: 5px; /* Small margin from the edge */
     position: relative;
     /* Added alignment for visual centering within toolbar height */
-    display: flex; 
+    display: flex;
     align-items: center;
     justify-content: center;
 }
@@ -231,5 +231,95 @@ body {
 
     100% {
         transform: rotate(45deg) rotateX(-385deg) rotateY(385deg);
+    }
+}
+
+/* Voice input toggle CSS */
+.voice-input-container {
+    --color: #a5a5b0;
+    --size: 20px; /* Stays at 20px for smaller icon */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+    font-size: var(--size);
+    user-select: none;
+    fill: var(--color);
+    margin-left: 0px; /* Removed margin-left */
+    margin-right: 20px; /* Moved left by adding margin-right */
+}
+
+.voice-input-container .microphone {
+    position: absolute;
+    animation: keyframes-fill .5s;
+    display: block; /* Default to microphone */
+}
+
+.voice-input-container .loader {
+    position: absolute;
+    display: none; /* Hidden by default */
+    animation: keyframes-fill .5s; /* Apply animation to loader too if desired */
+    gap: 0.2em; /* Adjust spacing between loader dots */
+}
+
+/* ------ On check event ------ */
+.voice-input-container input:checked ~ .microphone {
+    display: none; /* Hide microphone when checked */
+}
+
+.voice-input-container input:checked ~ .loader {
+    display: flex; /* Show loader when checked */
+}
+
+/* ------ Hide the default checkbox ------ */
+.voice-input-container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+/* ------ Animation ------ */
+@keyframes keyframes-fill {
+    0% {
+        transform: rotate(0deg) scale(0);
+        opacity: 0;
+    }
+
+    50% {
+        transform: rotate(-10deg) scale(1.2);
+    }
+}
+
+/* New CSS for the loader animation */
+.loader div {
+    /* Set height and width based on the --size variable from .voice-input-container */
+    height: calc(var(--size) * 0.5); /* Adjust multiplier as needed for visual balance */
+    width: calc(var(--size) * 0.5); /* Adjust multiplier as needed for visual balance */
+    background-color: rgb(34, 34, 34);
+    box-shadow: inset 2px 2px 10px black;
+    border-radius: 100%;
+}
+
+.box-load1 {
+    animation: brighten 1.2s infinite;
+}
+
+.box-load2 {
+    animation: brighten 1.2s infinite;
+    animation-delay: .2s;
+}
+
+.box-load3 {
+    animation: brighten 1.2s infinite;
+    animation-delay: .4s;
+}
+
+@keyframes brighten {
+    100% {
+        background-color: rgb(165, 165, 165);
+        box-shadow: none;
     }
 }
