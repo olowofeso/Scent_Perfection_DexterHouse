@@ -1,174 +1,200 @@
+# model.py
 import os
+import json
 from azure.ai.inference import ChatCompletionsClient
 from azure.ai.inference.models import SystemMessage, UserMessage, AssistantMessage
 from azure.core.credentials import AzureKeyCredential
-import json
+from dotenv import load_dotenv
 
-# --- Configuration for your DeepSeek API Access ---
-# IMPORTANT: Replace with your actual endpoint and model if different.
-# Also, NEVER hardcode your token in production. Use environment variables.
-# The token type (GitHub PAT, Azure Key, etc.) must match what the endpoint expects.
-DEEPSEEK_ENDPOINT = "https://models.github.ai/inference"
-DEEPSEEK_MODEL = "deepseek/DeepSeek-V3-0324" # Or your desired DeepSeek model (e.g., DeepSeek-R1-0528 if available on this endpoint)
+# Load environment variables from .env file
+load_dotenv()
 
-# This token type might be a GitHub Personal Access Token if it's GitHub's AI platform,
-# or an Azure AI endpoint key if it's an Azure service.
-# DO NOT EXPOSE YOUR ACTUAL TOKEN IN PUBLIC CODE.
-# For secure usage, load from environment variable:
-GITHUB_AI_TOKEN = os.getenv("GITHUB_AI_TOKEN", "xxxxx") 
+# --- Constants for AI Configuration ---
+AZURE_AI_CHAT_ENDPOINT = os.getenv("AZURE_AI_CHAT_ENDPOINT")
+AZURE_AI_API_KEY = os.getenv("AZURE_AI_API_KEY")
+DEFAULT_AZURE_OPENAI_DEPLOYMENT = "gpt-35-turbo" # Or your specific deployment name
 
-# --- Initialize the AI client ---
-try:
-    client = ChatCompletionsClient(
-        endpoint=DEEPSEEK_ENDPOINT,
-        credential=AzureKeyCredential(GITHUB_AI_TOKEN),
-    )
-    print("Azure AI Inference client initialized successfully.")
-except Exception as e:
-    print(f"Error initializing Azure AI Inference client: {e}")
-    print("Please ensure 'azure-ai-inference' and 'azure-core' are installed and your endpoint/token are correct.")
-    # Exit or handle gracefully if client cannot be initialized
-    exit()
+# Ensure the Azure AI endpoint and key are set
+if not AZURE_AI_CHAT_ENDPOINT or not AZURE_AI_API_KEY:
+    raise ValueError("Azure AI chat endpoint or API key is not set. Please check your .env file.")
 
-# --- Mock Database Interaction (Replace with your actual database logic) ---
-# In a real app, these would query your PostgreSQL/MongoDB database
-# with user profile, owned perfumes, and perfume notes.
+# Initialize the ChatCompletionsClient
+# Using a simple AzureKeyCredential; for production, consider more secure options like DefaultAzureCredential
+client = ChatCompletionsClient(
+    endpoint=AZURE_AI_CHAT_ENDPOINT,
+    credential=AzureKeyCredential(AZURE_AI_API_KEY)
+)
 
-def get_user_profile_from_db(user_id):
-    """Mocks fetching user data from a database."""
-    # In a real app, this would query your 'User Data Table'
-    return {
-        "age": 30,
-        "weight": 70,
-        "height": 175,
-        "sex": "male",
-        "style": "classic",
-        "race": "Caucasian"
-    }
-
-def get_owned_perfumes_from_db(user_id):
-    """Mocks fetching owned perfumes from a database."""
-    # In a real app, this would query your user's owned perfumes table
-    return [
-        {"name": "Dior Sauvage"},
-        {"name": "Chanel Bleu de Chanel"},
-        {"name": "Tom Ford Oud Wood"}
-    ]
-
-def get_perfume_notes_from_db(perfume_name):
-    """Mocks fetching perfume notes from the 'Perfume Notes Table'."""
-    # This data would come from your web scraping and database
-    notes_data = {
-        "Dior Sauvage": {"top": ["Bergamot", "Pepper"], "middle": ["Sichuan Pepper", "Geranium"], "base": ["Ambroxan", "Cedar"]},
-        "Chanel Bleu de Chanel": {"top": ["Grapefruit", "Mint"], "middle": ["Ginger", "Jasmine"], "base": ["Sandalwood", "Incense"]},
-        "Tom Ford Oud Wood": {"top": ["Rosewood", "Cardamom"], "middle": ["Oud", "Sandalwood"], "base": ["Vetiver", "Amber"]},
-        "Jo Malone Wood Sage & Sea Salt": {"top": ["Ambrette Seeds"], "middle": ["Sea Salt"], "base": ["Sage"]},
-        "Creed Aventus": {"top": ["Pineapple", "Bergamot"], "middle": ["Jasmine", "Patchouli"], "base": ["Oakmoss", "Ambergris"]}
-    }
-    return notes_data.get(perfume_name, {"top": [], "middle": [], "base": []})
-
-def add_perfume_notes_to_db(perfume_name, notes):
-    """Mocks adding new perfume notes to the database (after scraping)."""
-    # In a real app, this would update your 'Perfume Notes Table'
-    print(f"DEBUG: Simulating adding notes for '{perfume_name}' to DB: {notes}")
-    # You'd have actual DB insertion logic here
-
-# --- Main Chatbot Logic ---
-
-# We'll store conversation history here to provide context to the bot
-conversation_history = []
-
-def get_chatbot_response(user_id, user_message_text):
+def get_ai_response(user_profile, owned_perfumes, current_user_message, conversation_history_list):
     """
-    Orchestrates the chatbot interaction, fetching data, prompting DeepSeek,
-    and returning a formatted response.
+    Generates an AI response based on user profile, owned perfumes, current message, and conversation history.
+
+    Args:
+        user_profile (dict): User's profile data (age, style, etc.).
+        owned_perfumes (list of dicts): List of perfumes the user owns (e.g., [{"name": "Dior Sauvage"}]).
+        current_user_message (str): The latest message from the user.
+        conversation_history_list (list of dicts): The existing conversation log,
+                                                   e.g., [{"role": "user", "content": "..."},
+                                                          {"role": "assistant", "content": "..."}].
+                                                   This function expects `current_user_message` to be already
+                                                   appended to this list by the caller if that's the desired flow,
+                                                   or handle it internally if not. For this implementation,
+                                                   we assume `current_user_message` is the newest and not yet in history.
+
+    Returns:
+        str: The AI-generated response.
     """
-    print(f"\n--- Processing user query for user_id: {user_id} ---")
-    
-    # 1. Retrieve User Profile and Owned Perfumes
-    user_profile = get_user_profile_from_db(user_id)
-    owned_perfumes = get_owned_perfumes_from_db(user_id)
+    if not isinstance(user_profile, dict):
+        user_profile = {} # Default to empty if not a dict
+    if not isinstance(owned_perfumes, list):
+        owned_perfumes = [] # Default to empty list
+    if not isinstance(conversation_history_list, list):
+        conversation_history_list = [] # Default to empty list
 
-    # 2. Prepare context for the AI prompt
-    profile_str = ", ".join([f"{k}: {v}" for k, v in user_profile.items()])
-
-    owned_perfumes_details = []
-    for perfume in owned_perfumes:
-        notes = get_perfume_notes_from_db(perfume["name"])
-        top_str = ', '.join(notes.get("top", []))
-        mid_str = ', '.join(notes.get("middle", []))
-        base_str = ', '.join(notes.get("base", []))
-        owned_perfumes_details.append(f"- {perfume['name']} (Top: {top_str}; Middle: {mid_str}; Base: {base_str})")
-    owned_perfumes_str = "\n".join(owned_perfumes_details) if owned_perfumes_details else "None"
-
-    # Define the system message for the AI's persona
-    system_prompt_content = (
-        "You are a highly sophisticated and helpful AI perfume expert and fashion advisor. "
-        "Your goal is to provide personalized, actionable advice based on the user's profile, "
-        "their owned perfumes (including notes), the occasion, weather, and time of year. "
-        "You should offer:\n"
-        "1. Layering advice using their owned perfumes.\n"
-        "2. New perfume recommendations (with scent notes/profile if possible) if they are looking for one, "
-        "   considering their stated preferences or price range.\n"
-        "3. Fashion advice that complements their style and the occasion.\n"
-        "Maintain a friendly, knowledgeable, and elegant tone. Be concise but informative."
-    )
-
-    # Construct the current turn's user message
-    current_user_message = (
-        f"Here is my profile: {profile_str}.\n"
-        f"I currently own these perfumes:\n{owned_perfumes_str}\n\n"
-        f"My request: {user_message_text}\n\n"
-        "Please provide your personalized recommendations."
+    # --- Construct the System Message ---
+    system_message_content = (
+        "You are a sophisticated AI perfume consultant. Your goal is to help users discover new perfumes "
+        "they might like based on their preferences, owned perfumes, and ongoing conversation. "
+        "You can also provide information about perfumes, notes, and general fragrance advice. "
+        "Be friendly, knowledgeable, and engaging. Ask clarifying questions if needed. "
+        "When recommending, explain your reasoning clearly."
     )
     
-    # Build the full list of messages for the API call, including history
-    # The first message should always be the system message
-    messages_for_api = [SystemMessage(system_prompt_content)] + conversation_history + [UserMessage(current_user_message)]
+    # Incorporate user profile into the system message context if available
+    profile_details = ", ".join([f"{key}: {value}" for key, value in user_profile.items() if value is not None])
+    if profile_details:
+        system_message_content += f"\nUser Profile: {profile_details}."
 
-    print("Sending request to DeepSeek API...")
-    # print(json.dumps([m.model_dump() for m in messages_for_api], indent=2)) # For debugging prompt structure
+    # Incorporate owned perfumes into the system message context
+    if owned_perfumes:
+        perfume_names = ", ".join([p.get("name", "Unknown Perfume") for p in owned_perfumes])
+        system_message_content += f"\nUser Owns: {perfume_names}."
+    else:
+        system_message_content += "\nUser has not specified any owned perfumes yet."
+
+    # --- Construct the message list for the API ---
+    messages_for_api = [SystemMessage(content=system_message_content)]
+
+    # Add existing conversation history
+    for message_data in conversation_history_list:
+        role = message_data.get("role")
+        content = message_data.get("content")
+        if role == "user":
+            messages_for_api.append(UserMessage(content=content))
+        elif role == "assistant":
+            messages_for_api.append(AssistantMessage(content=content))
+        # Silently ignore messages with unknown roles for now
+
+    # Add the current user message (already appended by app.py to conversation_history_list before calling)
+    # So, no need to append current_user_message separately here as it's part of the history now.
 
     try:
-        # 4. Call the DeepSeek API
+        # Make the API call to Azure AI
         response = client.complete(
-            messages=messages_for_api, # Send the full conversation history
-            temperature=0.8,
-            top_p=0.9,
-            max_tokens=500,
-            model=DEEPSEEK_MODEL
+            messages=messages_for_api,
+            model=DEFAULT_AZURE_OPENAI_DEPLOYMENT,
+            # Optional parameters (adjust as needed):
+            # max_tokens=150,
+            # temperature=0.7,
+            # top_p=0.95,
+            # frequency_penalty=0,
+            # presence_penalty=0,
+            # stop=None # e.g., ["\n"]
         )
 
-        ai_content = response.choices[0].message.content
-        # print(f"\n--- AI Raw Response ---\n{ai_content}") # Keep for debugging if needed
-
-        # Add current user message and AI response to conversation history for next turn
-        conversation_history.append(UserMessage(user_message_text)) # Add user's current query
-        conversation_history.append(AssistantMessage(ai_content)) # Add AI's current response
-
-        return ai_content
+        # Extract the response content
+        if response.choices and len(response.choices) > 0:
+            ai_content = response.choices[0].message.content
+            return ai_content if ai_content else "I'm sorry, I couldn't generate a response at this moment."
+        else:
+            return "I'm sorry, I received an empty response from the AI service."
 
     except Exception as e:
-        print(f"Error during DeepSeek API call: {e}")
-        return "I apologize, but I'm currently unable to provide a recommendation. Please try again later."
+        print(f"Error calling Azure AI: {e}")
+        # In a real app, you might want to log this error more formally
+        return "I'm having trouble connecting to my brain right now. Please try again later."
 
-# --- Interactive Chatbot Loop for Testing ---
-if __name__ == "__main__":
-    print("Welcome to your Perfume & Fashion AI Chatbot!")
-    print("Type your questions about perfumes or fashion. Type 'exit' or 'quit' to end the chat.")
+# --- Placeholder for future functions (e.g., specific perfume matching) ---
+def find_similar_perfumes(perfume_name, user_preferences):
+    """
+    (Placeholder) Finds perfumes similar to a given one, considering user preferences.
+    """
+    # This would involve logic to query a perfume database, compare notes,
+    # factor in user_preferences (e.g., preferred notes, style, brands).
+    return f"Placeholder: Finding perfumes similar to {perfume_name} based on {user_preferences}."
 
-    user_id_for_testing = "test_user_001" # A fixed user ID for testing purposes
+if __name__ == '__main__':
+    # --- Example Usage (for testing model.py directly) ---
+    print("Testing AI response generation...")
 
-    while True:
-        user_input = input("\nYou: ").strip()
+    # Mock data for testing
+    mock_user_profile = {
+        "age": 30,
+        "style": "elegant",
+        "preferred_notes": ["vanilla", "sandalwood"]
+    }
+    mock_owned_perfumes = [
+        {"name": "Chanel No. 5"},
+        {"name": "Dior J'adore"}
+    ]
+    mock_history = [
+        {"role": "user", "content": "Hi, I'm looking for a new perfume."},
+        {"role": "assistant", "content": "Hello! I can help with that. What kind of scents do you usually enjoy?"},
+    ]
 
-        if user_input.lower() in ["exit", "quit"]:
-            print("Chatbot: Goodbye!")
-            break
+    # Scenario 1: User asks a general question, history includes this message
+    print("\n--- Scenario 1: General question with history ---")
+    test_message_1 = "I like floral and woody notes."
+    history_for_scenario1 = mock_history + [{"role": "user", "content": test_message_1}]
+    ai_response_1 = get_ai_response(
+        mock_user_profile,
+        mock_owned_perfumes,
+        test_message_1, # current_user_message is the last one in history
+        history_for_scenario1
+    )
+    print(f"User: {test_message_1}")
+    print(f"AI: {ai_response_1}")
 
-        # Get response from the chatbot function
-        bot_response = get_chatbot_response(user_id_for_testing, user_input)
-        
-        # Display the bot's response
-        print(f"Chatbot: {bot_response}")
+    # Scenario 2: User asks for a recommendation based on owned perfumes
+    print("\n--- Scenario 2: Recommendation based on owned ---")
+    test_message_2 = "Can you recommend something new based on what I own?"
+    history_for_scenario2 = mock_history + [
+        {"role": "user", "content": "I like floral and woody notes."}, # from previous turn
+        {"role": "assistant", "content": ai_response_1}, # AI's response from previous turn
+        {"role": "user", "content": test_message_2} # current message
+    ]
+    ai_response_2 = get_ai_response(
+        mock_user_profile,
+        mock_owned_perfumes,
+        test_message_2,
+        history_for_scenario2
+    )
+    print(f"User: {test_message_2}")
+    print(f"AI: {ai_response_2}")
 
+    # Scenario 3: No specific profile or owned perfumes, fresh conversation
+    print("\n--- Scenario 3: Fresh conversation, no profile/perfumes ---")
+    test_message_3 = "What are some popular men's fragrances for summer?"
+    history_for_scenario3 = [{"role": "user", "content": test_message_3}]
+    ai_response_3 = get_ai_response(
+        {}, # Empty profile
+        [], # No owned perfumes
+        test_message_3,
+        history_for_scenario3
+    )
+    print(f"User: {test_message_3}")
+    print(f"AI: {ai_response_3}")
+
+    # Scenario 4: Conversation history is empty, first message from user
+    print("\n--- Scenario 4: Empty history, first message ---")
+    test_message_4 = "Tell me about citrus notes."
+    history_for_scenario4 = [{"role": "user", "content": test_message_4}] # History includes this first message
+    ai_response_4 = get_ai_response(
+        mock_user_profile,
+        [], # No owned perfumes yet
+        test_message_4,
+        history_for_scenario4
+    )
+    print(f"User: {test_message_4}")
+    print(f"AI: {ai_response_4}")
+```

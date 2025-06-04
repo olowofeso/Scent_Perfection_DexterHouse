@@ -1,200 +1,185 @@
-import requests
+# gsearch.py
 import os
-import json
-import logging
-import time
-from datetime import datetime
+from googleapiclient.discovery import build
+from google.auth.exceptions import DefaultCredentialsError
+from dotenv import load_dotenv
 
-# --- Logging Configuration ---
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+# Attempt to import database components
+# These will be fully available when called from app.py's context
+try:
+    from app import db  # db instance from Flask app
+    from database_setup import Article
+except ImportError:
+    # This allows the script to be imported and parts of it run (like variable setup)
+    # without Flask context, but database operations will fail if db is None.
+    db = None
+    Article = None
+    print("Warning: gsearch.py running standalone or Flask app context not available. DB operations will be skipped.")
 
-# --- Google Custom Search API Configuration ---
-# WARNING: For production, set these as environment variables and REMOVE the default values.
-# For example, in your terminal (before running the script):
-# export GOOGLE_API_KEY="AIzaSyB6h1cZyOlsE6zZyoV3b471cPGRPxKhlxA"
-# export GOOGLE_CSE_ID="754fb4283ecf34455"
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "AIzaSyB6h1cZyOlsE6zZyoV3b471cPGRPxKhlxA") 
-GOOGLE_CSE_ID = os.getenv("GOOGLE_CSE_ID", "754fb4283ecf34455") 
 
-SEARCH_API_BASE_URL = "https://www.googleapis.com/customsearch/v1"
+# Load environment variables from .env file
+load_dotenv()
 
-# --- API Quotas and Limits ---
-MAX_RESULTS_PER_REQUEST = 10 # Max 10 results per single API call from Google CSE API
-DEFAULT_MAX_TOTAL_RESULTS = 20 # Default total results desired across all pages
-MAX_RETRIES = 3
-RETRY_DELAY_SECONDS = 5 
+# --- Constants for Google Search API ---
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+GOOGLE_CSE_ID = os.getenv("GOOGLE_CSE_ID") # Custom Search Engine ID
 
-class GoogleSearchAPIError(Exception):
-    """Custom exception for Google Search API errors."""
-    pass
+# --- Initialize Google Search Service ---
+google_search_service = None
+credentials_error_occurred = False
 
-def _make_single_search_request(query, start_index, num_results):
+if GOOGLE_API_KEY and GOOGLE_CSE_ID:
+    try:
+        google_search_service = build("customsearch", "v1", developerKey=GOOGLE_API_KEY)
+    except Exception as e:
+        print(f"Error initializing Google Search service: {e}")
+        google_search_service = None
+else:
+    print("Google API Key or CSE ID is missing. Google search functionality will be disabled.")
+    credentials_error_occurred = True
+
+
+def get_google_blog_posts(query: str, num_results: int = 5):
     """
-    Internal helper to make a single request to the Google Custom Search API.
-    Handles authentication, parameters, and basic retries for transient errors.
-    """
-    if not GOOGLE_API_KEY or not GOOGLE_CSE_ID:
-        raise GoogleSearchAPIError(
-            "Google API Key (GOOGLE_API_KEY) or Custom Search Engine ID (GOOGLE_CSE_ID) "
-            "environment variables are not set. Please set them or provide valid defaults."
-        )
-
-    params = {
-        "key": GOOGLE_API_KEY,
-        "cx": GOOGLE_CSE_ID,
-        "q": query,
-        "num": num_results, 
-        "start": start_index 
-    }
-
-    retries = 0
-    while retries < MAX_RETRIES:
-        try:
-            logger.info(f"Attempt {retries + 1}/{MAX_RETRIES}: Fetching results for '{query}' (start={start_index}, num={num_results})")
-            response = requests.get(SEARCH_API_BASE_URL, params=params, timeout=15) # 15-second timeout
-            response.raise_for_status() # Raise HTTPError for 4xx/5xx responses
-            
-            return response.json()
-
-        except requests.exceptions.HTTPError as http_err:
-            error_code = http_err.response.status_code
-            error_details = http_err.response.text
-            logger.error(f"HTTP Error {error_code} during Google Search: {error_details}")
-
-            if error_code == 400: # Bad Request (e.g., invalid parameter)
-                raise GoogleSearchAPIError(f"Bad Request (400): {error_details}")
-            elif error_code == 403: # Forbidden (e.g., API key invalid, quota exceeded, or key restrictions)
-                logger.warning(f"Quota exceeded or Forbidden (403). Retrying in {RETRY_DELAY_SECONDS}s...")
-                time.sleep(RETRY_DELAY_SECONDS)
-            elif error_code == 429: # Too Many Requests (Rate Limiting)
-                logger.warning(f"Rate limited (429). Retrying in {RETRY_DELAY_SECONDS}s...")
-                time.sleep(RETRY_DELAY_SECONDS)
-            elif error_code >= 500: # Server Errors
-                logger.warning(f"Server error ({error_code}). Retrying in {RETRY_DELAY_SECONDS}s...")
-                time.sleep(RETRY_DELAY_SECONDS)
-            else:
-                raise GoogleSearchAPIError(f"Unhandled HTTP error ({error_code}): {error_details}") from http_err
-        
-        except requests.exceptions.ConnectionError as conn_err:
-            logger.error(f"Connection Error during Google Search: {conn_err}. Retrying...")
-            time.sleep(RETRY_DELAY_SECONDS)
-        except requests.exceptions.Timeout:
-            logger.error(f"Timeout during Google Search for query: '{query}'. Retrying...")
-            time.sleep(RETRY_DELAY_SECONDS)
-        except json.JSONDecodeError:
-            logger.error("Error decoding JSON response from Google Search API. Response was not valid JSON.")
-            raise GoogleSearchAPIError("Invalid JSON response from API.")
-        except Exception as e:
-            logger.exception(f"An unexpected error occurred during Google Search request: {e}")
-            raise GoogleSearchAPIError(f"Unexpected error: {e}")
-
-        retries += 1
-    raise GoogleSearchAPIError(f"Failed to complete search request for '{query}' after {MAX_RETRIES} retries.")
-
-
-def get_google_blog_posts(query, max_results=DEFAULT_MAX_TOTAL_RESULTS):
-    """
-    Searches Google for blog posts related to perfume pairing/best practices.
-    Designed for production use with error handling and pagination.
+    Searches for blog posts related to a query using Google Custom Search API
+    and stores new unique articles in the database.
 
     Args:
-        query (str): The base search query (e.g., "best perfume pairs").
-        max_results (int): The maximum total number of results to fetch.
+        query (str): The search query.
+        num_results (int): The number of search results to return.
 
     Returns:
-        list: A list of dictionaries, each containing 'title', 'link', 'snippet',
-              representing relevant blog posts. Returns empty list on error or no results.
+        list: A list of search result dictionaries.
     """
-    all_blog_posts = []
-    current_start_index = 1
-    
-    # Refine the query to target blog posts
-    refined_query = f"{query} blog | review | guide | tips"
-    logger.info(f"Refined search query for blog posts: '{refined_query}'")
+    if credentials_error_occurred or not google_search_service:
+        print("Google Search API is not configured. Cannot fetch articles.")
+        return []
 
-    while len(all_blog_posts) < max_results:
-        num_to_fetch_this_page = min(MAX_RESULTS_PER_REQUEST, max_results - len(all_blog_posts))
+    if not query:
+        print("Search query cannot be empty.")
+        return []
+
+    refined_query = f"{query} perfume review OR fragrance blog OR perfume forum"
+
+    try:
+        print(f"Executing Google Custom Search for: '{refined_query}' (requesting {num_results} results)")
+        result = google_search_service.cse().list(
+            q=refined_query,
+            cx=GOOGLE_CSE_ID,
+            num=num_results,
+        ).execute()
+
+        items = result.get('items', [])
         
-        if num_to_fetch_this_page <= 0:
-            break
+        if not items:
+            print(f"No Google search results found for '{refined_query}'.")
+            return []
 
-        try:
-            search_response = _make_single_search_request(refined_query, current_start_index, num_to_fetch_this_page)
+        search_results_for_return = []
+        new_articles_added_count = 0
 
-            if 'items' in search_response:
-                for item in search_response['items']:
-                    # Simple filter to prefer blog-like content (can be refined with more advanced URL/title parsing)
-                    # This aims to exclude pure product pages, categories, etc.
-                    if any(ext in item.get('link', '').lower() for ext in ['.html', '.php', '.asp', '.htm', '.org']) and \
-                       not any(key_word in item.get('link', '').lower() for key_word in ['/category/', '/tag/', '/author/', '/shop/', '/product/', '/collection/', '/buy/']):
-                        all_blog_posts.append({
-                            "title": item.get('title', 'N/A'),
-                            "link": item.get('link', 'N/A'),
-                            "snippet": item.get('snippet', 'N/A'),
-                            "source_domain": item.get('displayLink', 'N/A') # Get the clean domain
-                        })
-                
-                next_page_start_index = None
-                if 'queries' in search_response and 'nextPage' in search_response['queries']:
-                    next_page_start_index = search_response['queries']['nextPage'][0]['startIndex']
-                
-                if next_page_start_index and next_page_start_index > current_start_index:
-                    current_start_index = next_page_start_index
-                else:
-                    logger.info(f"No more pages indicated for query: '{refined_query}'.")
-                    break 
+        for item in items:
+            title = item.get("title")
+            link = item.get("link")
+            snippet = item.get("snippet")
+
+            search_results_for_return.append({
+                "title": title,
+                "link": link,
+                "snippet": snippet
+            })
+
+            # --- Database Integration: Store new articles ---
+            if db and Article: # Check if db and Article model are available
+                try:
+                    # Check if an article with this URL already exists
+                    existing_article = db.session.query(Article).filter_by(source_url=link).first()
+                    if not existing_article:
+                        new_article = Article(
+                            title=title,
+                            source_url=link,
+                            content=snippet # Storing snippet as content for now
+                        )
+                        db.session.add(new_article)
+                        new_articles_added_count += 1
+                    else:
+                        print(f"Article with URL '{link}' already exists. Skipping.")
+                except Exception as db_error:
+                    print(f"Database error while trying to add article '{title}': {db_error}")
+                    # Optionally, db.session.rollback() if a transaction is problematic
+            # --- End Database Integration ---
+
+        if db and Article and new_articles_added_count > 0:
+            try:
+                db.session.commit()
+                print(f"Successfully added {new_articles_added_count} new articles to the database.")
+            except Exception as commit_error:
+                print(f"Database commit error: {commit_error}")
+                db.session.rollback() # Rollback in case of commit error
+
+        print(f"Found {len(search_results_for_return)} results from Google Custom Search.")
+        return search_results_for_return
+
+    except DefaultCredentialsError:
+        print("Google API credentials error. Ensure GOOGLE_APPLICATION_CREDENTIALS env var is set or gcloud login.")
+        return []
+    except Exception as e:
+        print(f"An error occurred with Google Custom Search: {e}")
+        # Handle specific HTTP errors as before for better diagnostics
+        if "HttpError 403" in str(e) and "disabled_key" in str(e):
+            print("ERROR: Google API key disabled.")
+        elif "HttpError 403" in str(e) and "forbidden" in str(e):
+            print("ERROR: Google API key invalid or no permissions for Custom Search API.")
+        elif "HttpError 400" in str(e) and "invalid_parameter" in str(e) and "cx" in str(e):
+             print("ERROR: Custom Search Engine ID (cx) invalid.")
+        return []
+
+
+if __name__ == '__main__':
+    print("Testing Google Custom Search for blog posts...")
+
+    if credentials_error_occurred or not google_search_service:
+        print("\nSkipping gsearch.py tests: Google Search API not configured (API_KEY/CSE_ID missing or invalid).")
+    elif not db or not Article:
+        print("\nSkipping gsearch.py tests: Database components (db, Article) not available in standalone mode.")
+        print("To test database integration, run this functionality through the Flask app.")
+        # Optionally, could still run a non-DB test:
+        # print("\n--- Running non-DB search test ---")
+        # results_no_db = get_google_blog_posts("test query without db", num_results=1)
+        # if results_no_db:
+        #     print(f"Found {len(results_no_db)} result(s) (DB operations skipped).")
+        # else:
+        #     print("No results found (DB operations skipped).")
+    else:
+        # This block will likely not run successfully in standalone `python gsearch.py`
+        # because `db` won't be initialized with a Flask app context.
+        # It's here for completeness if the environment could somehow provide `db`.
+        print("\nAttempting test with (potentially non-functional) DB operations in standalone mode:")
+
+        # Clean up dummy articles if they exist from a previous failed run (for testing only)
+        # This is tricky in standalone. For true testing, a dedicated test DB and setup is needed.
+        # For now, we'll just proceed. If app.py runs this, it will use the app's DB context.
+
+        test_queries = [
+            "Dior Sauvage review blog",
+            "best summer fragrances for men forum",
+            "Chanel No 5 detailed analysis"
+        ]
+
+        for t_query in test_queries:
+            print(f"\n--- Searching for: '{t_query}' (expecting DB ops if in Flask context) ---")
+            results = get_google_blog_posts(t_query, num_results=2) # Request few results for testing
+            if results:
+                for i, res in enumerate(results):
+                    print(f"  Result {i+1}: Title: {res['title']}")
             else:
-                logger.info(f"No search results 'items' found for '{refined_query}' starting at index {current_start_index}.")
-                break 
-
-        except GoogleSearchAPIError as e:
-            logger.error(f"Critical error during blog post search for '{query}': {e}. Stopping.")
-            break 
-    
-    logger.info(f"Finished blog post search for '{query}'. Retrieved {len(all_blog_posts)} blog posts.")
-    return all_blog_posts
-
-# --- Example Usage for Testing ---
-if __name__ == "__main__":
-    print("--- Running Google Search for Perfume Blog Posts ---")
-    print("WARNING: Using hardcoded API Key and CSE ID for testing. Set environment variables for production!")
-    print("To use environment variables (recommended), uncomment the 'export' lines at the top of the script and run them in your terminal before execution.")
-    print("-" * 60)
-
-    # Test Queries specific to perfume pairing and best practices
-    test_queries = [
-        "best perfume layering combinations blog",
-        "perfume pairing guide for couples",
-        "how to pick a signature scent blog",
-        "perfume etiquette tips and tricks",
-        "top 10 perfume blog reviews",
-        "fragrance blending ideas",
-        "perfume pairing with outfits blog"
-    ]
-
-    for query in test_queries:
-        print(f"\n--- Searching for blog posts: \"{query}\" ---")
-        try:
-            # Fetch up to 5 blog posts for each test query
-            blog_posts = get_google_blog_posts(query, max_results=5) 
-
-            if blog_posts:
-                print(f"Found {len(blog_posts)} relevant blog posts:")
-                for i, post in enumerate(blog_posts):
-                    print(f"  {i+1}. Title: {post['title']}")
-                    print(f"     Link: {post['link']}")
-                    print(f"     Source: {post['source_domain']}")
-                    print(f"     Snippet: {post['snippet'][:250]}...") # Limit snippet length
-                    print("-" * 20)
-            else:
-                print("No blog posts found for this query.")
-        except GoogleSearchAPIError as e:
-            print(f"Error during search: {e}")
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")
+                print(f"  No results found for '{t_query}'.")
         
-        time.sleep(2) # Small delay to be polite to the API during testing
-    
-    print("\n--- Google Search for Blog Posts Test Complete ---")
-    print("Review the output for relevant results and logs for any errors.")
+        # Example: Query the DB to see if articles were added (again, needs app context)
+        # try:
+        #     all_articles_in_db = db.session.query(Article).all()
+        #     print(f"\nTotal articles in DB after tests: {len(all_articles_in_db)}")
+        #     for art_entry in all_articles_in_db:
+        #         print(f"  - DB: {art_entry.title} ({art_entry.source_url})")
+        # except Exception as e:
+        #     print(f"Could not query articles from DB in standalone: {e}")

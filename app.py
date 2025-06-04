@@ -1,30 +1,32 @@
-# app.py (Conceptual Flask application)
 from flask import Flask, request, jsonify, render_template, session, redirect, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
-import uuid # For generating unique user IDs
+import json # Added for robust JSON handling in scrape_perfume_notes
 
-# Import your AI and search logic
-from model import get_ai_response # Assuming get_ai_response is the main function in model.py
+# Import AI, search, and scrape functions (to be adapted later)
+from model import get_ai_response
 from gsearch import get_google_blog_posts
 from scrape import scrape_fragrantica_notes
 
+# SQLAlchemy and model imports
+from flask_sqlalchemy import SQLAlchemy
+from database_setup import User, UserPerfume, PerfumeNote, Article, ConversationHistory
+
 app = Flask(__name__,
-            static_folder='../css', # Serve CSS files from the css directory
-            template_folder='../')   # Serve HTML files from the root directory
+            static_folder='frontend/static',
+            template_folder='frontend/html')
 
-# For session management (replace with a strong secret key in production)
-app.secret_key = os.getenv('FLASK_SECRET_KEY', 'your_super_secret_key_here')
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'dev_secret_key_CHANGE_THIS_IN_PROD')
+app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///./perfume_app.db"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# --- Dummy Database (Replace with a real database like SQLite, PostgreSQL, MongoDB) ---
-# In a real app, this would be a database connection.
-users_db = {} # {user_id: {email, password_hash, perfumes, profile_data, conversation_history}}
+db = SQLAlchemy(app)
 
-# --- Helper function for secure user handling (conceptual) ---
-def get_user_id():
+# --- Helper function ---
+def get_current_user_id():
     return session.get('user_id')
 
-# --- Routes for Frontend HTML pages ---
+# --- Frontend Routes ---
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -35,24 +37,23 @@ def login_page():
 
 @app.route('/perfume-entry.html')
 def perfume_entry_page():
-    if not get_user_id():
+    if not get_current_user_id():
         return redirect(url_for('login_page'))
     return render_template('perfume-entry.html')
 
 @app.route('/chatbot.html')
 def chatbot_page():
-    if not get_user_id():
+    if not get_current_user_id():
         return redirect(url_for('login_page'))
     return render_template('chatbot.html')
 
 @app.route('/settings.html')
 def settings_page():
-    if not get_user_id():
+    if not get_current_user_id():
         return redirect(url_for('login_page'))
     return render_template('settings.html')
 
 # --- API Endpoints ---
-
 @app.route('/api/signup', methods=['POST'])
 def signup():
     data = request.get_json()
@@ -62,22 +63,20 @@ def signup():
     if not email or not password:
         return jsonify({"message": "Email and password are required"}), 400
 
-    # Check if user already exists (conceptual)
-    for user_id, user_data in users_db.items():
-        if user_data['email'] == email:
-            return jsonify({"message": "User with this email already exists"}), 409
+    if db.session.query(User).filter_by(email=email).first():
+        return jsonify({"message": "User with this email already exists"}), 409
 
     hashed_password = generate_password_hash(password)
-    user_id = str(uuid.uuid4()) # Generate a unique ID
-    users_db[user_id] = {
-        "email": email,
-        "password_hash": hashed_password,
-        "perfumes": [],
-        "profile_data": {},
-        "conversation_history": []
-    }
-    session['user_id'] = user_id
-    return jsonify({"message": "User registered successfully", "user_id": user_id}), 201
+    new_user = User(email=email, password_hash=hashed_password)
+    db.session.add(new_user)
+    db.session.commit()
+
+    new_conversation_history = ConversationHistory(user_id=new_user.id, history_json=[])
+    db.session.add(new_conversation_history)
+    db.session.commit()
+
+    session['user_id'] = new_user.id
+    return jsonify({"message": "User registered successfully", "user_id": new_user.id}), 201
 
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -88,18 +87,12 @@ def login():
     if not email or not password:
         return jsonify({"message": "Email and password are required"}), 400
 
-    user_found = False
-    for user_id, user_data in users_db.items():
-        if user_data['email'] == email:
-            if check_password_hash(user_data['password_hash'], password):
-                session['user_id'] = user_id
-                user_found = True
-                return jsonify({"message": "Login successful", "user_id": user_id}), 200
-            break
+    user = db.session.query(User).filter_by(email=email).first()
+    if user and check_password_hash(user.password_hash, password):
+        session['user_id'] = user.id
+        return jsonify({"message": "Login successful", "user_id": user.id}), 200
     
-    if not user_found:
-        return jsonify({"message": "Invalid email or password"}), 401
-
+    return jsonify({"message": "Invalid email or password"}), 401
 
 @app.route('/api/logout', methods=['POST'])
 def logout():
@@ -108,59 +101,216 @@ def logout():
 
 @app.route('/api/perfumes', methods=['GET', 'POST'])
 def handle_perfumes():
-    user_id = get_user_id()
+    user_id = get_current_user_id()
     if not user_id:
         return jsonify({"message": "Unauthorized"}), 401
 
     if request.method == 'GET':
-        return jsonify({"perfumes": users_db[user_id].get('perfumes', [])}), 200
+        user_perfumes = db.session.query(UserPerfume).filter_by(user_id=user_id).all()
+        perfume_names = [up.perfume_name for up in user_perfumes]
+        return jsonify({"perfumes": perfume_names}), 200
+
     elif request.method == 'POST':
         data = request.get_json()
         perfume_name = data.get('perfumeName')
-        if perfume_name and perfume_name not in users_db[user_id]['perfumes']:
-            users_db[user_id]['perfumes'].append(perfume_name)
-            return jsonify({"message": "Perfume added", "perfumes": users_db[user_id]['perfumes']}), 201
-        return jsonify({"message": "Invalid input or perfume already exists"}), 400
+        if not perfume_name:
+            return jsonify({"message": "Perfume name is required"}), 400
 
-# Integrate Chatbot
+        existing_perfume = db.session.query(UserPerfume).filter_by(user_id=user_id, perfume_name=perfume_name).first()
+        if existing_perfume:
+            return jsonify({"message": "Perfume already in list"}), 409
+
+        new_user_perfume = UserPerfume(user_id=user_id, perfume_name=perfume_name)
+        db.session.add(new_user_perfume)
+        db.session.commit()
+
+        user_perfumes = db.session.query(UserPerfume).filter_by(user_id=user_id).all()
+        perfume_names = [up.perfume_name for up in user_perfumes]
+        return jsonify({"message": "Perfume added", "perfumes": perfume_names}), 201
+
 @app.route('/api/chatbot', methods=['POST'])
 def chatbot_interaction():
-    user_id = get_user_id()
+    user_id = get_current_user_id()
     if not user_id:
         return jsonify({"message": "Unauthorized"}), 401
 
-    user_message = request.get_json().get('message')
-    if not user_message:
+    user_message_text = request.get_json().get('message')
+    if not user_message_text:
         return jsonify({"message": "No message provided"}), 400
 
-    # Retrieve conversation history for the current user
-    conversation_history = users_db[user_id].get('conversation_history', [])
+    current_user = db.session.get(User, user_id)
+    if not current_user:
+        session.pop('user_id', None)
+        return jsonify({"message": "User not found, please log in again."}), 404
 
-    # Call your AI model
-    # Potentially integrate gsearch and scrape within get_ai_response or call them here
-    ai_response_text = get_ai_response(user_message, conversation_history)
+    user_conversation = db.session.query(ConversationHistory).filter_by(user_id=user_id).first()
+    if not user_conversation: # Fallback, should be created at signup
+        user_conversation = ConversationHistory(user_id=user_id, history_json=[])
+        db.session.add(user_conversation)
+        # db.session.commit() # Commit later after appending messages
 
-    # Update conversation history
-    users_db[user_id]['conversation_history'] = conversation_history # get_ai_response should update this list
+    conversation_history_list = list(user_conversation.history_json) # Make a mutable copy
+    conversation_history_list.append({"role": "user", "content": user_message_text})
+
+    user_profile_data = {
+        "age": current_user.age, "weight": current_user.weight, "height": current_user.height,
+        "sex": current_user.sex, "style": current_user.style, "race": current_user.race
+    }
+    owned_perfumes_data = [{"name": p.perfume_name} for p in current_user.perfumes]
+
+    # Call to model.py's get_ai_response (to be refactored in next plan step)
+    ai_response_text = get_ai_response(
+        user_profile_data,
+        owned_perfumes_data,
+        user_message_text,
+        conversation_history_list
+    )
+
+    conversation_history_list.append({"role": "assistant", "content": ai_response_text})
+    user_conversation.history_json = conversation_history_list
+    db.session.commit()
 
     return jsonify({"response": ai_response_text}), 200
 
-# Integrate perfume scraping (if needed as a separate endpoint or within chatbot)
 @app.route('/api/scrape_perfume_notes', methods=['POST'])
-def get_perfume_notes():
+def api_get_perfume_notes(): # Renamed to avoid conflict with imported scrape_fragrantica_notes
     data = request.get_json()
     perfume_name = data.get('perfumeName')
     if not perfume_name:
         return jsonify({"message": "Perfume name is required"}), 400
 
     try:
-        notes = scrape_fragrantica_notes(perfume_name)
-        if notes:
-            return jsonify(notes), 200
+        existing_notes_model = db.session.query(PerfumeNote).filter_by(perfume_name=perfume_name).first()
+
+        if existing_notes_model and existing_notes_model.notes_json:
+            notes_data = existing_notes_model.notes_json
+            if isinstance(notes_data, str): # If stored as a string, try to parse
+                try:
+                    notes_data = json.loads(notes_data)
+                except json.JSONDecodeError:
+                    # Invalid JSON string, proceed to scrape
+                    pass # Fall through to scraping
+            if isinstance(notes_data, dict): # Successfully loaded or already a dict
+                 # Basic check for expected structure, e.g. if it has 'top', 'middle', 'base'
+                if all(k in notes_data for k in ('top', 'middle', 'base')):
+                    return jsonify(notes_data), 200
+                # else, data is not as expected, fall through to re-scrape
+
+        scraped_notes_data = scrape_fragrantica_notes(perfume_name) # Expected to return a dict
+
+        if scraped_notes_data and isinstance(scraped_notes_data, dict):
+            if existing_notes_model:
+                existing_notes_model.notes_json = scraped_notes_data # Update existing entry
+            else:
+                new_note_entry = PerfumeNote(perfume_name=perfume_name, notes_json=scraped_notes_data)
+                db.session.add(new_note_entry)
+            db.session.commit()
+            return jsonify(scraped_notes_data), 200
         else:
-            return jsonify({"message": "Could not find notes for this perfume."}), 404
+            # If scrape_fragrantica_notes returned None or not a dict
+            error_message = "Could not find or scrape notes for this perfume."
+            if existing_notes_model and existing_notes_model.notes_json: # Check again if there was old valid data
+                 notes_data_fallback = existing_notes_model.notes_json
+                 if isinstance(notes_data_fallback, str): notes_data_fallback = json.loads(notes_data_fallback) # basic attempt
+                 if isinstance(notes_data_fallback, dict): return jsonify(notes_data_fallback), 200 # Return old data if scrape failed
+            return jsonify({"message": error_message}), 404
+
     except Exception as e:
-        return jsonify({"message": f"Error scraping notes: {str(e)}"}), 500
+        app.logger.error(f"Error processing perfume notes for {perfume_name}: {str(e)}")
+        return jsonify({"message": f"Error processing perfume notes: {str(e)}"}), 500
+
+@app.route('/api/user/profile', methods=['GET'])
+def get_user_profile():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"message": "Unauthorized"}), 401
+
+    user = db.session.get(User, user_id)
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    return jsonify({
+        "email": user.email, # Email is read-only for this example
+        "age": user.age,
+        "weight": user.weight,
+        "height": user.height,
+        "sex": user.sex,
+        "style": user.style,
+        "race": user.race
+    }), 200
+
+@app.route('/api/user/profile', methods=['PUT'])
+def update_user_profile():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"message": "Unauthorized"}), 401
+
+    user = db.session.get(User, user_id)
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"message": "No data provided"}), 400
+
+    # Update fields if they are provided in the request
+    user.age = data.get('age', user.age)
+    user.weight = data.get('weight', user.weight)
+    user.height = data.get('height', user.height)
+    user.sex = data.get('sex', user.sex)
+    user.style = data.get('style', user.style)
+    user.race = data.get('race', user.race)
+
+    try:
+        db.session.commit()
+        return jsonify({"message": "Profile updated successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error updating profile for user {user_id}: {str(e)}")
+        return jsonify({"message": "Error updating profile"}), 500
+
+@app.route('/api/user/password', methods=['PUT'])
+def update_user_password():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"message": "Unauthorized"}), 401
+
+    user = db.session.get(User, user_id)
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"message": "No data provided"}), 400
+
+    current_password = data.get('current_password')
+    new_password = data.get('new_password')
+
+    if not current_password or not new_password:
+        return jsonify({"message": "Current password and new password are required"}), 400
+
+    if not check_password_hash(user.password_hash, current_password):
+        return jsonify({"message": "Invalid current password"}), 403
+
+    if len(new_password) < 6: # Example: Basic password length validation
+        return jsonify({"message": "New password must be at least 6 characters long"}), 400
+
+    user.password_hash = generate_password_hash(new_password)
+    try:
+        db.session.commit()
+        return jsonify({"message": "Password updated successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error updating password for user {user_id}: {str(e)}")
+        return jsonify({"message": "Error updating password"}), 500
+
+# --- Placeholder for Google Login ---
+@app.route('/api/login/google')
+def login_google_placeholder():
+    return jsonify({"message": "Google login not yet implemented"}), 501
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000) 
+    # For development, it can be useful to ensure tables are created if the db file is missing.
+    # from database_setup import engine, Base
+    # Base.metadata.create_all(bind=engine) # Creates tables if they don't exist
+    app.run(debug=True, port=5000)
