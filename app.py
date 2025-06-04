@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template, session, redirect, url_for
+from flask import Flask, request, jsonify, render_template, session, redirect, url_for, g
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import json # Added for robust JSON handling in scrape_perfume_notes
@@ -22,6 +22,48 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
+# Define public endpoints that do not require login
+# These are the names of the view functions or blueprint.view_function
+PUBLIC_ENDPOINTS = [
+    'login_page',  # Route for /login.html
+    'signup',      # API endpoint /api/signup
+    'login',       # API endpoint /api/login
+    'index',       # Route for / (which is the signup page)
+    'static'       # Flask's endpoint for serving static files
+]
+# Additionally, allow specific paths if they are not covered by endpoints (e.g. favicons)
+# For this app, /frontend/css/* and /frontend/js/* might be requested if HTML isn't using url_for('static', ...)
+# However, the Flask static folder is 'frontend/static', so correct URLs should be /static/css/*
+# We will rely on the 'static' endpoint and correct HTML linking.
+# If CSS/JS are directly under /css or /js, they need to be explicitly allowed by path if not using 'static' endpoint.
+
+@app.before_request
+def require_login():
+    # Check if the user is logged in
+    is_logged_in = 'user_id' in session
+
+    # If the user is not logged in and the requested endpoint is not public
+    if not is_logged_in and request.endpoint not in PUBLIC_ENDPOINTS:
+        # Also check if the request path is for static assets served directly by development server
+        # (e.g., if not using the 'static' endpoint for some reason, like /css/style.css)
+        # This check is a bit of a fallback. Ideally, all static assets use the 'static' endpoint.
+        # For this project, static_folder is 'frontend/static', so URLs should be like /static/css/file.css
+        # The 'static' endpoint check should cover these.
+        # If HTML uses paths like '../css/style.css', these resolve to '/css/style.css'.
+        # These won't match 'static' endpoint.
+        # A more lenient check for paths (less secure, more permissive):
+        # if request.path.startswith('/css/') or request.path.startswith('/js/'):
+        #     return # Allow access to CSS and JS files directly by path
+
+        app.logger.debug(f"Unauthorized access attempt to {request.endpoint} (path: {request.path}). User not logged in. Redirecting to login.")
+        return redirect(url_for('login_page'))
+
+    # If user is logged in, set g.user if needed for other parts of the app (optional here)
+    # if is_logged_in:
+    #     g.user = db.session.get(User, session['user_id']) # Example
+    # else:
+    #     g.user = None
+
 # --- Helper function ---
 def get_current_user_id():
     return session.get('user_id')
@@ -37,8 +79,16 @@ def login_page():
 
 @app.route('/perfume-entry.html')
 def perfume_entry_page():
-    if not get_current_user_id():
+    user_id = get_current_user_id() # Uses existing helper
+    if not user_id:
         return redirect(url_for('login_page'))
+    # If first login is done and they aren't coming from a specific edit flow (future), send to chatbot.
+    # For now, this simplifies the first-time flow.
+    if session.get('first_login_completed'):
+         # Check if they have any perfumes, if not, maybe allow them back?
+         # For now, strict redirect if first_login_completed is true.
+         # This handles the case where they try to URL-navigate back after completion.
+        return redirect(url_for('chatbot_page'))
     return render_template('perfume-entry.html')
 
 @app.route('/chatbot.html')
@@ -52,6 +102,22 @@ def settings_page():
     if not get_current_user_id():
         return redirect(url_for('login_page'))
     return render_template('settings.html')
+
+@app.route('/first-time-login.html')
+def first_time_login_page():
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login_page'))
+    # If user somehow lands here after completing first login, send to chatbot
+    if session.get('first_login_completed'):
+        return redirect(url_for('chatbot_page'))
+    return render_template('first-time-login.html')
+
+@app.route('/admin_dashboard.html')
+def admin_dashboard_page():
+    if not session.get('user_id') or not session.get('is_admin'):
+        return redirect(url_for('login_page')) # Or an unauthorized page
+    return render_template('admin_dashboard.html')
 
 # --- API Endpoints ---
 @app.route('/api/signup', methods=['POST'])
@@ -76,7 +142,12 @@ def signup():
     db.session.commit()
 
     session['user_id'] = new_user.id
-    return jsonify({"message": "User registered successfully", "user_id": new_user.id}), 201
+    session['first_login_completed'] = new_user.first_login_completed # Store this in session too
+    return jsonify({
+        "message": "User registered successfully",
+        "user_id": new_user.id,
+        "redirect_url": url_for('first_time_login_page') # Use the function name of the route
+    }), 201
 
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -90,13 +161,47 @@ def login():
     user = db.session.query(User).filter_by(email=email).first()
     if user and check_password_hash(user.password_hash, password):
         session['user_id'] = user.id
-        return jsonify({"message": "Login successful", "user_id": user.id}), 200
+        session['first_login_completed'] = user.first_login_completed
+        session['is_admin'] = user.is_admin
+
+        redirect_url = ''
+        if user.is_admin: # check_password_hash already confirmed the password for this user
+            redirect_url = url_for('admin_dashboard_page')
+        elif not user.first_login_completed:
+            redirect_url = url_for('first_time_login_page')
+        else:
+            redirect_url = url_for('chatbot_page')
+
+        return jsonify({"message": "Login successful", "user_id": user.id, "redirect_url": redirect_url}), 200
     
     return jsonify({"message": "Invalid email or password"}), 401
+
+@app.route('/api/user/complete_first_login', methods=['POST'])
+def complete_first_login():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"message": "Unauthorized"}), 401
+
+    user = db.session.get(User, user_id)
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    if not user.first_login_completed:
+        user.first_login_completed = True
+        db.session.commit()
+        session['first_login_completed'] = True
+        return jsonify({"message": "First login process completed.", "redirect_url": url_for('chatbot_page')}), 200
+    else:
+        # Already completed, just send them along
+        return jsonify({"message": "First login already completed.", "redirect_url": url_for('chatbot_page')}), 200
 
 @app.route('/api/logout', methods=['POST'])
 def logout():
     session.pop('user_id', None)
+    session.pop('first_login_completed', None) # Clear this on logout too
+    session.pop('is_admin', None) # Clear this on logout too
+    session.pop('first_login_completed', None)
+    session.pop('is_admin', None)
     return jsonify({"message": "Logged out successfully"}), 200
 
 @app.route('/api/perfumes', methods=['GET', 'POST'])

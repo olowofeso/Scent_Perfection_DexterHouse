@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+</head>
+<body>
+    <h1>Admin Dashboard</h1>
+    <p>Welcome, Admin!</p>
+    <button id="adminLogoutBtn">Logout</button>
+    <script>
+        document.getElementById('adminLogoutBtn').addEventListener('click', function() {
+            fetch('/api/logout', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    window.location.href = '/login.html';
+                })
+                .catch(error => {
+                    console.error('Logout error:', error);
+                    alert('Error during logout.');
+                });
+        });
+    </script>
+</body>
+</html>

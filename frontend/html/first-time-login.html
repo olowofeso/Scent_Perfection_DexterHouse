@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perfume AI - Complete Your Profile</title>
-    <link rel="stylesheet" href="../css/firsttime.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/firsttime.css') }}">
 </head>
 <body>
     <div class="stepper-box">
@@ -374,19 +374,43 @@
                 formData.forEach((value, key) => {
                     // Use internal standard units for submission
                     if (key === 'weight') {
-                        data[key] = isNaN(internalWeightKg) ? null : internalWeightKg.toFixed(1); // Ensure consistent unit for backend
-                        data['weightUnit'] = 'kg'; // Also send the unit used internally
+                        data[key] = isNaN(internalWeightKg) ? null : internalWeightKg.toFixed(1);
                     } else if (key === 'height') {
-                        data[key] = isNaN(internalHeightCm) ? null : internalHeightCm.toFixed(0); // Ensure consistent unit for backend
-                        data['heightUnit'] = 'cm'; // Also send the unit used internally
+                        data[key] = isNaN(internalHeightCm) ? null : internalHeightCm.toFixed(0);
                     } else {
                         data[key] = value;
                     }
                 });
-                console.log('Final Form Data (Internal Units):', data);
 
-                // Example: Redirect to another page after submission
-                // window.location.href = 'dashboard.html';
+                // Make sure 'weight' and 'height' in data are numbers or null
+                data.age = data.age ? parseInt(data.age) : null;
+                data.weight = data.weight ? parseFloat(data.weight) : null;
+                data.height = data.height ? parseFloat(data.height) : null;
+
+                // Remove the unit fields from the data object to be sent
+                delete data.weightUnit;
+                delete data.heightUnit;
+
+                fetch('/api/user/profile', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json().then(resData => ({status: response.status, body: resData})))
+                .then(({status, body}) => {
+                    if (status === 200) {
+                        alert('Profile information saved successfully!');
+                        window.location.href = '/perfume-entry.html'; // Redirect to perfume entry
+                    } else {
+                        alert('Error saving profile: ' + (body.message || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error submitting profile data:', error);
+                    alert('An error occurred while saving your profile. Please try again.');
+                });
             } else {
                 alert('Please complete all required fields in this step.');
             }

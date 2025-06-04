@@ -4,9 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perfume AI Chatbot</title>
-    <link rel="stylesheet" href="../css/chatbot-styles.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot-styles.css') }}">
 </head>
 <body>
+    <div style="position: absolute; top: 10px; right: 10px; font-size: 24px;">
+        <a href="{{ url_for('settings_page') }}" style="text-decoration: none; color: #333;">
+            &#9881; <!-- Unicode gear -->
+        </a>
+    </div>
     <div class="chatbot-container-wrapper">
         <div class="container">
             <div class="terminal_toolbar">

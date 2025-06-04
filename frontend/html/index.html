@@ -4,24 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up</title>
-    <link rel="stylesheet" href="../css/signup-styles.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/signup-styles.css') }}">
 </head>
 <body>
     <div class="signup-container">
         <div class="signup-form_area">
             <p class="signup-title">SIGN UP</p>
-            <form action="">
+            <form id="actualSignupForm">
                 <div class="signup-form_group">
                     <label class="signup-sub_title" for="name">Name</label>
                     <input placeholder="Enter your full name" class="signup-form_style" type="text">
                 </div>
                 <div class="signup-form_group">
                     <label class="signup-sub_title" for="email">Email</label>
-                    <input placeholder="Enter your email" id="email" class="signup-form_style" type="email">
+                    <input placeholder="Enter your email" id="signupEmail" class="signup-form_style" type="email">
                 </div>
                 <div class="signup-form_group">
                     <label class="signup-sub_title" for="password">Password</label>
-                    <input placeholder="Enter your password" id="password" class="signup-form_style" type="password">
+                    <input placeholder="Enter your password" id="signupPassword" class="signup-form_style" type="password">
                 </div>
                 <div>
                     <button class="signup-btn">SIGN UP</button>

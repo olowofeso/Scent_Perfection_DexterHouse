@@ -343,6 +343,48 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+    const loginForm = document.getElementById('actualLoginForm');
+    if (loginForm) { // Check if this is the login page
+        loginForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) {
+                alert('Please enter both email and password.');
+                return;
+            }
+
+            fetch('/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email: email, password: password }),
+            })
+            .then(response => response.json().then(data => ({ status: response.status, body: data })))
+            .then(({ status, body }) => {
+                if (status === 200) {
+                    if (body.redirect_url) {
+                        window.location.href = body.redirect_url;
+                    } else {
+                        alert(body.message || 'Login successful! Redirecting...');
+                        // Fallback redirect if needed, though backend should always provide it
+                        window.location.href = '/chatbot.html';
+                    }
+                } else {
+                    alert('Login failed: ' + (body.message || 'Invalid email or password.'));
+                }
+            })
+            .catch(error => {
+                console.error('Login error:', error);
+                alert('An error occurred during login. Please try again.');
+            });
+        });
+    }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
     const perfumeNameInput = document.getElementById('perfumeNameInput');
     const addPerfumeBtn = document.getElementById('addPerfumeBtn');
     const perfumeList = document.getElementById('perfumeList');
@@ -401,36 +443,33 @@ document.addEventListener('DOMContentLoaded', () => {
             renderPerfumeList(); // Re-render the list to show the new item and its buttons
             perfumeNameInput.value = ''; // Clear input
 
-            // --- Backend Communication Placeholder ---
-            console.log('Sending new perfume to backend:', newPerfume);
-            // Example:
-            /*
-            fetch('/api/perfumes/owned', {
+            fetch('/api/perfumes', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer YOUR_AUTH_TOKEN'
+                    // Authorization header might be needed if you implement token auth later
                 },
-                body: JSON.stringify(newPerfume)
+                body: JSON.stringify({ perfumeName: newPerfume.name }) // Send newPerfume.name
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to add perfume');
+            .then(response => response.json().then(data => ({status: response.status, body: data})))
+            .then(({status, body}) => {
+                if (status === 201) {
+                    console.log('Perfume added to backend:', body.perfumes);
+                    // Optionally, update the local 'ownedPerfumes' with data from backend if IDs change
+                    // For now, local update is sufficient as backend confirms add.
+                } else {
+                    alert('Error adding perfume to backend: ' + (body.message || 'Unknown error'));
+                    // Optionally, remove the perfume from the local 'ownedPerfumes' list if backend failed
+                    // ownedPerfumes = ownedPerfumes.filter(p => p.id !== newPerfume.id);
+                    // renderPerfumeList();
                 }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Perfume added successfully:', data);
-                // Update ownedPerfumes with ID from backend if needed
             })
             .catch(error => {
-                console.error('Error adding perfume:', error);
-                alert('Could not add perfume. Please try again.');
-                // Optionally remove from ownedPerfumes if backend failed
-                ownedPerfumes = ownedPerfumes.filter(p => p.id !== newPerfume.id);
-                renderPerfumeList();
+                console.error('Error adding perfume to backend:', error);
+                alert('Could not save perfume. Please try again.');
+                // ownedPerfumes = ownedPerfumes.filter(p => p.id !== newPerfume.id);
+                // renderPerfumeList();
             });
-            */
         } else {
             alert('Please enter a perfume name.');
         }
@@ -542,8 +581,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     goToChatbotBtn.addEventListener('click', () => {
-        alert('Proceeding to Chatbot (simulated)!');
-        window.location.href = 'chatbot.html'; // Redirect to chatbot page
+        fetch('/api/user/complete_first_login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json().then(data => ({status: response.status, body: data})))
+        .then(({status, body}) => {
+            if (status === 200) {
+                alert(body.message || 'Setup complete! Taking you to the chatbot.');
+                if (body.redirect_url) {
+                    window.location.href = body.redirect_url;
+                } else {
+                    window.location.href = '/chatbot.html'; // Fallback
+                }
+            } else {
+                alert('Error completing setup: ' + (body.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error completing first login setup:', error);
+            alert('An error occurred. Please try again.');
+        });
     });
 
     // Initial render when the page loads
@@ -891,3 +951,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 //wahala
+
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('actualSignupForm');
+    if (form) { // Ensure we are on the signup page
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+
+            // Basic validation
+            if (!email || !password) {
+                alert('Please enter both email and password.');
+                return;
+            }
+
+            fetch('/api/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email: email, password: password }),
+            })
+            .then(response => response.json().then(data => ({ status: response.status, body: data })))
+            .then(({ status, body }) => {
+                if (status === 201) {
+                    if (body.redirect_url) {
+                        window.location.href = body.redirect_url;
+                    } else {
+                        // Fallback if redirect_url is missing, though backend should always send it
+                        alert(body.message || 'Signup successful! Redirecting...');
+                        window.location.href = '/login.html'; // Or a default page
+                    }
+                } else {
+                    alert('Signup failed: ' + (body.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Signup error:', error);
+                alert('An error occurred during signup. Please try again.');
+            });
+        });
+    }
+});

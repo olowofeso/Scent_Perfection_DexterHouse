@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Text, ForeignKey, JSON
+from sqlalchemy import create_engine, Column, Integer, String, Text, ForeignKey, JSON, Boolean
 from sqlalchemy.orm import relationship, sessionmaker, declarative_base
 import os
 
@@ -17,6 +17,8 @@ class User(Base):
     sex = Column(String, nullable=True)
     style = Column(String, nullable=True)
     race = Column(String, nullable=True)
+    first_login_completed = Column(Boolean, default=False, nullable=False)
+    is_admin = Column(Boolean, default=False, nullable=False)
     # Relationships
     perfumes = relationship("UserPerfume", back_populates="user")
     conversation_history = relationship("ConversationHistory", back_populates="user", uselist=False)
