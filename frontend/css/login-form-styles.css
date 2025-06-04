@@ -1,12 +1,3 @@
-.center-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh; /* Takes full viewport height */
-    width: 100%;
-    background-color: #f4f4f4; /* A light grey background for the page */
-}
-
 .form {
     --input-focus: #2d8cf0;
     --font-color: #323232;

@@ -1,0 +1,16 @@
+/* General styles for the application */
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4; /* A light grey background for the page */
+}
+
+.center-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* Takes full viewport height */
+    width: 100%;
+    /* background-color is inherited from body or can be set specifically if needed */
+}
