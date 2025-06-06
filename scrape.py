@@ -11,10 +11,15 @@ from thefuzz import process, fuzz
 
 import undetected_chromedriver as uc
 
-def scrape_fragrantica_notes(perfume_name):
+def scrape_fragrantica_notes(perfume_name: str, interactive: bool = True):
     """
     Searches for a perfume on Fragrantica and scrapes its scent notes.
     This function initializes and quits its own WebDriver.
+
+    Args:
+        perfume_name (str): The name of the perfume to search for.
+        interactive (bool): If True, prompts user to choose from suggestions.
+                            If False, tries to pick the best match automatically.
     """
     fragrantica_url = "https://www.fragrantica.com/"
     notes = {}
@@ -92,28 +97,55 @@ def scrape_fragrantica_notes(perfume_name):
                 print("WARNING: No valid unique suggestions found in the dropdown's perfume dataset.")
                 return {}
             
-            print("\n--- Found multiple perfumes. Please select one: ---")
             suggestion_list = list(unique_suggestions.keys())
-            for i, text in enumerate(suggestion_list):
-                print(f"{i+1}. {text}")
-            print("---------------------------------------------------")
+            chosen_perfume_name = None
+            relevant_link_element = None
 
-            chosen_index = -1
-            while True:
-                try:
-                    choice = input("Enter the number of your choice (1-{}): ".format(len(suggestion_list))).strip()
-                    chosen_index = int(choice) - 1
-                    if 0 <= chosen_index < len(suggestion_list):
-                        break
+            if interactive:
+                print("\n--- Found multiple perfumes. Please select one: ---")
+                for i, text in enumerate(suggestion_list):
+                    print(f"{i+1}. {text}")
+                print("---------------------------------------------------")
+
+                chosen_index = -1
+                while True:
+                    try:
+                        choice = input("Enter the number of your choice (1-{}): ".format(len(suggestion_list))).strip()
+                        chosen_index = int(choice) - 1
+                        if 0 <= chosen_index < len(suggestion_list):
+                            break
+                        else:
+                            print("Invalid choice. Please enter a number within the range.")
+                    except ValueError:
+                        print("Invalid input. Please enter a number.")
+                chosen_perfume_name = suggestion_list[chosen_index]
+                relevant_link_element = unique_suggestions[chosen_perfume_name]
+                print(f"DEBUG: User chose: '{chosen_perfume_name}'.")
+            else: # Non-interactive mode
+                print(f"DEBUG: Non-interactive mode. Trying to find best match for '{perfume_name}' among suggestions: {suggestion_list}")
+                # Use process.extractOne to find the best match from the suggestion texts
+                # We use the original perfume_name (the search query) to compare against the suggestions from Fragrantica
+                best_match_tuple = process.extractOne(perfume_name, suggestion_list, scorer=fuzz.ratio) # fuzz.token_set_ratio might be better
+
+                if best_match_tuple:
+                    extracted_name, score = best_match_tuple
+                    print(f"DEBUG: Best match in suggestions: '{extracted_name}' with score {score}")
+                    if score >= 85: # Adjusted threshold for auto-selection based on Fragrantica's own search results
+                        chosen_perfume_name = extracted_name
+                        relevant_link_element = unique_suggestions[chosen_perfume_name]
+                        print(f"DEBUG: Automatically selected '{chosen_perfume_name}' (Score: {score}).")
                     else:
-                        print("Invalid choice. Please enter a number within the range.")
-                except ValueError:
-                    print("Invalid input. Please enter a number.")
+                        print(f"DEBUG: No high-confidence single match found (best was '{extracted_name}' with score {score}). Aborting non-interactive selection.")
+                        return {} # Cannot proceed without a clear choice
+                else:
+                    print("DEBUG: process.extractOne returned no match from suggestions. Aborting.")
+                    return {}
             
-            chosen_perfume_name = suggestion_list[chosen_index]
-            relevant_link_element = unique_suggestions[chosen_perfume_name]
+            if not chosen_perfume_name or not relevant_link_element:
+                print("DEBUG: Could not determine a perfume to proceed with from suggestions. Aborting.")
+                return {}
 
-            print(f"DEBUG: You chose: '{chosen_perfume_name}'. Clicking link...")
+            print(f"DEBUG: Proceeding with '{chosen_perfume_name}'. Clicking link...")
             driver.execute_script("arguments[0].click();", relevant_link_element) 
             print("DEBUG: Chosen suggestion clicked. Waiting for perfume page to load...")
 
@@ -333,6 +365,36 @@ if __name__ == "__main__":
         "Afnan Supremacy Not Only Intense"
     ]
 
+    # --- Test Non-Interactive Mode ---
+    print("\n--- Testing Non-Interactive Mode ---")
+    # Using a name that is likely to be a unique and strong first result on Fragrantica
+    # Note: Fragrantica search can be finicky; this might need adjustment.
+    non_interactive_test_perfume = "Dior Sauvage Eau de Parfum"
+    print(f"Attempting to scrape '{non_interactive_test_perfume}' non-interactively...")
+    # First, let's see if our internal fuzzy match corrects it to something in KNOWN_PERFUMES
+    # This part simulates the pre-scraping name correction that might happen in a full app
+    best_match_non_interactive_tuple = process.extractOne(non_interactive_test_perfume, known_perfumes, scorer=fuzz.ratio)
+    final_search_name_non_interactive = non_interactive_test_perfume
+    if best_match_non_interactive_tuple:
+        name, score = best_match_non_interactive_tuple
+        if score >= 85: # Using a slightly higher threshold for auto-correction before search
+            print(f"DEBUG: Pre-search correction: '{non_interactive_test_perfume}' to '{name}' (Score: {score})")
+            final_search_name_non_interactive = name
+        else:
+            print(f"DEBUG: Pre-search: No strong correction for '{non_interactive_test_perfume}' (Best: {name}, Score: {score}). Using original/typed name.")
+
+    notes_non_interactive = scrape_fragrantica_notes(final_search_name_non_interactive, interactive=False)
+    if notes_non_interactive:
+        print(f"\n--- Scent Notes for {final_search_name_non_interactive.title()} (Non-Interactive) ---")
+        for section, note_list in notes_non_interactive.items():
+            print(f"{section.title()} Notes: {', '.join(note_list)}")
+        print("-" * 30)
+    else:
+        print(f"Could not retrieve notes for '{final_search_name_non_interactive}' in non-interactive mode.")
+    print("--- Non-Interactive Test Complete ---\n")
+
+    # --- Interactive Mode (existing loop) ---
+    print("\n--- Testing Interactive Mode ---")
     while True:
         user_input = input("Enter the perfume name (e.g., 'By the Fireplace', 'Sauvage'), or 'quit' to exit: ").strip()
         if user_input.lower() == 'quit':
@@ -341,32 +403,35 @@ if __name__ == "__main__":
             print("Perfume name cannot be empty. Please try again.")
             continue
 
+        # Fuzzy matching against known_perfumes list (pre-correction)
         best_match_tuple = process.extractOne(user_input, known_perfumes, scorer=fuzz.ratio)
+        corrected_perfume_name = user_input # Default to user input
         
-        corrected_perfume_name = user_input
         if best_match_tuple:
             best_match_name, score = best_match_tuple
-            if score >= 80 and score < 95:
-                print(f"Suggestion: Did you mean '{best_match_name}'? (Confidence: {score}%)")
-                confirm = input("Enter 'y' to confirm, or 'n' to search for your original query: ").strip().lower()
-                if confirm == 'y':
+            if score >= 80: # Threshold for suggesting or auto-correcting
+                print(f"Suggestion based on internal list: Did you mean '{best_match_name}'? (Confidence: {score}%)")
+                if score >= 95: # Higher score for auto-correction
+                    print(f"Auto-correcting to '{best_match_name}' for search.")
                     corrected_perfume_name = best_match_name
                 else:
-                    print(f"Searching for original query: '{user_input}'")
-            elif score >= 95:
-                corrected_perfume_name = best_match_name
-                print(f"Auto-correcting to '{corrected_perfume_name}' (Confidence: {score}%)")
+                    confirm = input("Enter 'y' to use suggestion, or 'n' to search for your original query: ").strip().lower()
+                    if confirm == 'y':
+                        corrected_perfume_name = best_match_name
+                    else:
+                        print(f"Searching for original query: '{user_input}'")
             else:
-                print(f"No close match found for '{user_input}'. Searching with original query.")
+                print(f"No close match found in internal list for '{user_input}'. Searching with original query.")
         else:
             print(f"No matches in known perfumes. Searching with original query: '{user_input}'")
 
-        print(f"\n--- Initiating search for: {corrected_perfume_name} ---")
-        scent_notes = scrape_fragrantica_notes(corrected_perfume_name)
+        print(f"\n--- Initiating interactive search for: {corrected_perfume_name} ---")
+        # Pass interactive=True for the interactive part of the test
+        scent_notes = scrape_fragrantica_notes(corrected_perfume_name, interactive=True)
 
         if scent_notes:
-            print(f"\n--- Scent Notes for {corrected_perfume_name.title()} ---")
-            if 'top' in scent_notes:
+            print(f"\n--- Scent Notes for {corrected_perfume_name.title()} (Interactive) ---")
+            if 'top' in scent_notes: # Ensure keys exist before accessing
                 print(f"Top Notes: {', '.join(scent_notes['top'])}")
             if 'middle' in scent_notes:
                 print(f"Middle Notes: {', '.join(scent_notes['middle'])}")
@@ -374,5 +439,6 @@ if __name__ == "__main__":
                 print(f"Base Notes: {', '.join(scent_notes['base'])}")
             print("-" * (len(corrected_perfume_name) + 30))
         else:
-            print(f"Could not retrieve scent notes for '{corrected_perfume_name}'. Please check the spelling or try a different perfume.")
+            print(f"Could not retrieve scent notes for '{corrected_perfume_name}' in interactive mode.")
         print("\n")
+    print("--- Interactive Test Complete ---")
